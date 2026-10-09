@@ -5,6 +5,7 @@ import { Image as ImageIcon, FileText, Music, BarChart2, Copy, Check, Sparkles }
 import { Tilt } from './motion-primitives/tilt';
 import { BorderTrail } from './motion-primitives/border-trail';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth, useClerk } from '@clerk/react';
 
 interface PromptCardProps {
   prompt: PromptItem;
@@ -44,6 +45,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
     return () => observer.disconnect();
   }, [prompt.previewVideo]);
 
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+
   // Play/pause video based on viewport visibility to free GPU during 144Hz scroll
   useEffect(() => {
     if (!videoRef.current) return;
@@ -57,6 +61,12 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   const handleCopyPrompt = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isSignedIn) {
+      openSignIn();
+      return;
+    }
+
     const textToCopy = prompt.promptTemplate || prompt.promptSnippet || prompt.description;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);

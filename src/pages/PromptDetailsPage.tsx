@@ -24,11 +24,14 @@ import { Tilt } from '../components/motion-primitives/tilt';
 import { BorderTrail } from '../components/motion-primitives/border-trail';
 import { Magnetic } from '../components/motion-primitives/magnetic';
 import { AnimatedBackground } from '../components/motion-primitives/animated-background';
+import { useAuth, useClerk } from '@clerk/react';
 
 export const PromptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
   const [activeTab, setActiveTab] = useState<'Description' | 'Use Cases' | 'Examples'>('Description');
   const [copied, setCopied] = useState(false);
   const [added, setAdded] = useState(false);
