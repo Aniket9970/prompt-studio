@@ -33,6 +33,7 @@ interface PromptsContextType {
   resetPrompts: () => Promise<void>;
   getPromptById: (id: string) => PromptItem | undefined;
   refreshPrompts: () => Promise<void>;
+  fetchPromptVideo: (id: string) => Promise<string | null>;
   trackPromptCopy: (id: string) => void;
   trackPromptView: (id: string) => void;
   getPromptPopularity: (prompt: PromptItem) => number;
@@ -61,14 +62,47 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSupabaseLive, setIsSupabaseLive] = useState<boolean>(isSupabaseConfigured);
 
-  // Sync prompts to localStorage cache for offline/instant initial render
+  // Columns to fetch initially for fast rendering without statement timeouts
+  const PROMPT_METADATA_COLUMNS =
+    'id, title, description, model, category, price, is_free, image_url, fallback_icon, rating, reviews_count, downloads, uses, likes, prompt_template, prompt_snippet, type_label, creator_name, creator_handle, creator_avatar_url, is_popular, is_recent, key_features, created_at';
+
+  // Sync prompts to localStorage cache for offline/instant initial render (stripping heavy base64 video URLs to avoid QuotaExceededError)
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
+      const sanitized = prompts.map((p) => {
+        if (p.previewVideo && p.previewVideo.startsWith('data:')) {
+          const { previewVideo, ...rest } = p;
+          return rest;
+        }
+        return p;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
     } catch (e) {
       console.warn('Failed to persist prompts to cache:', e);
     }
   }, [prompts]);
+
+  // Fetch a single prompt video on-demand (used when viewing prompt details or card)
+  const fetchPromptVideo = useCallback(async (id: string): Promise<string | null> => {
+    if (!isSupabaseConfigured) return null;
+    try {
+      const { data, error } = await supabase
+        .from('prompts')
+        .select('preview_video')
+        .eq('id', id)
+        .single();
+
+      if (!error && data?.preview_video) {
+        setPrompts((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, previewVideo: data.preview_video } : p))
+        );
+        return data.preview_video;
+      }
+    } catch (e) {
+      console.warn('Single prompt video load error:', e);
+    }
+    return null;
+  }, []);
 
   // Fetch prompts directly from Supabase backend
   const fetchPromptsFromSupabase = useCallback(async () => {
@@ -78,14 +112,16 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     try {
+      // Step 1: Rapidly fetch all prompts metadata (excluding massive preview_video base64 payloads to prevent DB statement timeouts)
       const { data, error } = await supabase
         .from('prompts')
-        .select('*')
+        .select(PROMPT_METADATA_COLUMNS)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.warn('Supabase fetch notice:', error.message);
         setIsSupabaseLive(false);
+        setIsLoading(false);
         return;
       }
 
@@ -110,7 +146,45 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
 
         const mappedPrompts = validRows.map(mapRowToPrompt);
-        setPrompts(mappedPrompts);
+
+        // Instantly render all prompts to screen (preserving any previewVideo already fetched)
+        setPrompts((prev) => {
+          return mappedPrompts.map((newP) => {
+            const existing = prev.find((p) => p.id === newP.id);
+            if (existing?.previewVideo) {
+              return { ...newP, previewVideo: existing.previewVideo };
+            }
+            return newP;
+          });
+        });
+        setIsLoading(false);
+
+        // Step 2: Progressively fetch preview_video in micro-batches (size 3) in the background so cards get video previews without timeouts
+        const validIds = validRows.map((r: any) => String(r.id));
+        const BATCH_SIZE = 3;
+        for (let i = 0; i < validIds.length; i += BATCH_SIZE) {
+          const batchIds = validIds.slice(i, i + BATCH_SIZE);
+          try {
+            const { data: videoData, error: videoError } = await supabase
+              .from('prompts')
+              .select('id, preview_video')
+              .in('id', batchIds);
+
+            if (!videoError && videoData && videoData.length > 0) {
+              setPrompts((currentPrompts) =>
+                currentPrompts.map((p) => {
+                  const match = videoData.find((v: any) => String(v.id) === String(p.id));
+                  if (match && match.preview_video) {
+                    return { ...p, previewVideo: match.preview_video };
+                  }
+                  return p;
+                })
+              );
+            }
+          } catch (batchErr) {
+            console.warn('Batch video loading notice:', batchErr);
+          }
+        }
       }
     } catch (err) {
       console.warn('Failed to load prompts from Supabase:', err);
@@ -411,6 +485,7 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         resetPrompts,
         getPromptById,
         refreshPrompts: fetchPromptsFromSupabase,
+        fetchPromptVideo,
         trackPromptCopy,
         trackPromptView,
         getPromptPopularity,

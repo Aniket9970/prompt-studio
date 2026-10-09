@@ -28,7 +28,7 @@ import { useAuth, useClerk } from '@clerk/react';
 export const PromptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { prompts, getPromptById, trackPromptCopy, trackPromptView } = usePrompts();
+  const { prompts, getPromptById, trackPromptCopy, trackPromptView, fetchPromptVideo } = usePrompts();
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isSignedIn } = useAuth();
@@ -44,8 +44,11 @@ export const PromptDetailsPage: React.FC = () => {
   useEffect(() => {
     if (prompt?.id) {
       trackPromptView(prompt.id);
+      if (!prompt.previewVideo) {
+        fetchPromptVideo(prompt.id);
+      }
     }
-  }, [prompt?.id, trackPromptView]);
+  }, [prompt?.id, prompt?.previewVideo, trackPromptView, fetchPromptVideo]);
 
   if (!prompt) {
     return (
