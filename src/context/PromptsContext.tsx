@@ -239,27 +239,50 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Update prompt in Supabase backend
   const updatePrompt = async (id: string, updated: Partial<PromptItem>): Promise<void> => {
     setPrompts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updated, creator: DEFAULT_STUDIO_CREATOR } : p))
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        return {
+          ...p,
+          ...updated,
+          creator: updated.creator || p.creator || DEFAULT_STUDIO_CREATOR,
+        };
+      })
     );
 
     if (isSupabaseConfigured) {
       try {
-        await supabase
+        const payload: any = {};
+        if (updated.title !== undefined) payload.title = updated.title;
+        if (updated.description !== undefined) payload.description = updated.description;
+        if (updated.category !== undefined) payload.category = updated.category;
+        if (updated.model !== undefined) payload.model = updated.model;
+        if (updated.price !== undefined) {
+          payload.price = typeof updated.price === 'number' ? updated.price : 0;
+          payload.is_free = updated.price === 'Free';
+        }
+        if (updated.imageUrl !== undefined) payload.image_url = updated.imageUrl || null;
+        if (updated.previewVideo !== undefined) payload.preview_video = updated.previewVideo || null;
+        if (updated.promptTemplate !== undefined) {
+          payload.prompt_template = updated.promptTemplate;
+          payload.prompt_snippet = updated.promptTemplate.slice(0, 140) + '...';
+        }
+        if (updated.typeLabel !== undefined) payload.type_label = updated.typeLabel;
+        if (updated.isPopular !== undefined) payload.is_popular = updated.isPopular;
+        if (updated.creator?.name !== undefined) payload.creator_name = updated.creator.name;
+        if (updated.creator?.handle !== undefined) {
+          payload.creator_handle = updated.creator.handle.replace(/^@+/, '');
+        }
+        if (updated.keyFeatures !== undefined) payload.key_features = updated.keyFeatures;
+        payload.updated_at = new Date().toISOString();
+
+        const { error } = await supabase
           .from('prompts')
-          .update({
-            title: updated.title,
-            description: updated.description,
-            category: updated.category,
-            model: updated.model,
-            price: typeof updated.price === 'number' ? updated.price : 0,
-            is_free: updated.price === 'Free',
-            image_url: updated.imageUrl,
-            preview_video: updated.previewVideo,
-            prompt_template: updated.promptTemplate,
-            type_label: updated.typeLabel,
-            is_popular: updated.isPopular,
-          })
+          .update(payload)
           .eq('id', id);
+
+        if (error) {
+          console.warn('Supabase update notice:', error.message);
+        }
       } catch (err) {
         console.warn('Failed to update in Supabase:', err);
       }

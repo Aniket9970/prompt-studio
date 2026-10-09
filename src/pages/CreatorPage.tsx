@@ -23,6 +23,7 @@ import {
   X,
   Database,
   BadgeCheck,
+  Pencil,
 } from 'lucide-react';
 import { usePrompts } from '../context/PromptsContext';
 import { uploadMediaToSupabase } from '../lib/supabase';
@@ -37,7 +38,7 @@ export const AUTHORIZED_CREATOR_EMAIL = 'aniketkhatkhede123@gmail.com';
 export const CREATOR_PASSKEY = '9970@Aniket';
 
 export const CreatorPage: React.FC = () => {
-  const { prompts, isSupabaseLive, addPrompt, deletePrompt, resetPrompts } = usePrompts();
+  const { prompts, isSupabaseLive, addPrompt, updatePrompt, deletePrompt, resetPrompts } = usePrompts();
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -61,6 +62,7 @@ export const CreatorPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'code-export'>('upload');
 
   // Form State
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
   const [creatorName, setCreatorName] = useState<string>(() => localStorage.getItem('ps_creator_name') || 'PROMPT STUDIO');
   const [creatorHandle, setCreatorHandle] = useState<string>(() => localStorage.getItem('ps_creator_handle') || 'promptstudio');
   const [title, setTitle] = useState('');
@@ -131,6 +133,52 @@ export const CreatorPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
 
+  const handleStartEdit = (p: PromptItem) => {
+    setEditingPromptId(p.id);
+    setTitle(p.title);
+    setDescription(p.description);
+    setCategory(p.category);
+    setModel(p.model);
+    setTypeLabel(p.typeLabel || 'Interactive App');
+    setIsFree(p.price === 'Free');
+    setPrice(typeof p.price === 'number' ? String(p.price) : '19');
+    setPreviewVideo(p.previewVideo || '');
+    setImageUrl(p.imageUrl || '');
+    setPromptTemplate(p.promptTemplate || '');
+    setIsPopular(p.isPopular ?? true);
+    setCreatorName(p.creator.name);
+    setCreatorHandle(p.creator.handle.replace(/^@+/, ''));
+    if (p.keyFeatures && p.keyFeatures.length > 0) {
+      if (p.keyFeatures[0]) {
+        setFeat1Title(p.keyFeatures[0].title);
+        setFeat1Sub(p.keyFeatures[0].subtitle);
+      }
+      if (p.keyFeatures[1]) {
+        setFeat2Title(p.keyFeatures[1].title);
+        setFeat2Sub(p.keyFeatures[1].subtitle);
+      }
+      if (p.keyFeatures[2]) {
+        setFeat3Title(p.keyFeatures[2].title);
+        setFeat3Sub(p.keyFeatures[2].subtitle);
+      }
+    }
+    setActiveTab('upload');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPromptId(null);
+    setTitle('');
+    setDescription('');
+    setPromptTemplate('');
+    setPreviewVideo('');
+    setImageUrl('');
+    setUploadedVideoName('');
+    setUploadedImageName('');
+    setSelectedVideoFile(null);
+    setSelectedImageFile(null);
+  };
+
   const handleVerifyPasskey = (e: React.FormEvent) => {
     e.preventDefault();
     if (passkeyInput === CREATOR_PASSKEY) {
@@ -200,7 +248,30 @@ export const CreatorPage: React.FC = () => {
         isVerified: true,
       };
 
-      // 3. Save prompt record to Supabase database
+      // 3. Save or Update prompt record in Supabase database
+      if (editingPromptId) {
+        await updatePrompt(editingPromptId, {
+          title: title.trim(),
+          description: description.trim(),
+          category: category,
+          model: model.trim() || 'AI APP',
+          typeLabel: typeLabel.trim() || 'Web App',
+          price: isFree ? 'Free' : (parseFloat(price) || 19),
+          previewVideo: finalVideoUrl,
+          imageUrl: finalImageUrl,
+          promptTemplate: promptTemplate.trim(),
+          isPopular,
+          keyFeatures,
+          creator: customCreator,
+        });
+
+        setSuccessMessage(`Prompt "${title.trim()}" successfully updated!`);
+        setTimeout(() => setSuccessMessage(null), 5000);
+        handleCancelEdit();
+        setActiveTab('manage');
+        return;
+      }
+
       const newPrompt = await addPrompt({
         title: title.trim(),
         description: description.trim(),
@@ -529,8 +600,8 @@ export const CreatorPage: React.FC = () => {
                 : 'text-[#6B6D75] hover:text-[#1A1A18]'
             }`}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Upload New</span>
+            {editingPromptId ? <Pencil className="w-3.5 h-3.5 text-amber-500" /> : <Plus className="w-3.5 h-3.5" />}
+            <span>{editingPromptId ? 'Edit Prompt' : 'Upload New'}</span>
           </button>
 
           <button
@@ -558,18 +629,45 @@ export const CreatorPage: React.FC = () => {
           </button>
         </div>
 
-        {/* TAB 1: UPLOAD NEW PROMPT */}
+        {/* TAB 1: UPLOAD / EDIT PROMPT */}
         {activeTab === 'upload' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10">
             {/* Left: Input Form (7 cols) */}
             <div className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl border border-[#E8E9F0] p-5 sm:p-8 card-shadow">
+              {editingPromptId && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center flex-shrink-0 font-bold">
+                      <Pencil className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-xs font-extrabold text-amber-950 truncate">
+                        Editing: {title || 'Prompt'}
+                      </span>
+                      <span className="text-[11px] text-amber-800/80 block">
+                        Make your modifications and click "Save & Update Prompt" below.
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="px-3 py-1.5 bg-white border border-amber-300 text-amber-900 rounded-xl text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer flex-shrink-0"
+                  >
+                    Cancel Edit
+                  </button>
+                </div>
+              )}
+
               <div className="mb-6 pb-6 border-b border-[#F0F1F6]">
                 <h2 className="font-display text-lg sm:text-xl font-extrabold text-[#1A1A18] flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-[#8AAAFF]" />
-                  Prompt Details & Publishing Form
+                  {editingPromptId ? 'Edit Prompt Details' : 'Prompt Details & Publishing Form'}
                 </h2>
                 <p className="text-xs text-[#6B6D75] mt-1">
-                  Fill in the details below. Once you click publish, the prompt will be instantly live on your website under <strong>PROMPT STUDIO</strong>.
+                  {editingPromptId
+                    ? 'Update the fields below to modify your live prompt in Supabase.'
+                    : 'Fill in the details below. Once you click publish, the prompt will be instantly live on your website under PROMPT STUDIO.'}
                 </p>
               </div>
 
@@ -1012,24 +1110,41 @@ export const CreatorPage: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isPublishing}
-                  className="w-full py-4 bg-[#1A1A18] hover:bg-[#333333] disabled:bg-[#555555] text-white rounded-2xl font-bold text-sm uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                >
-                  {isPublishing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Saving Prompt & Media to Supabase...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      <span>Publish Prompt to Website</span>
-                    </>
+                {/* Submit / Update Button */}
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={isPublishing}
+                    className="w-full sm:flex-1 py-4 bg-[#1A1A18] hover:bg-[#333333] disabled:bg-[#555555] text-white rounded-2xl font-bold text-sm uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    {isPublishing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>{editingPromptId ? 'Updating in Supabase...' : 'Saving Prompt & Media to Supabase...'}</span>
+                      </>
+                    ) : editingPromptId ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span>Save & Update Prompt</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>Publish Prompt to Website</span>
+                      </>
+                    )}
+                  </button>
+
+                  {editingPromptId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="w-full sm:w-auto px-6 py-4 bg-white border border-[#E8E9F0] hover:bg-[#F7F8FC] text-[#1A1A18] rounded-2xl font-bold text-sm uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
                   )}
-                </button>
+                </div>
               </form>
             </div>
 
@@ -1160,6 +1275,14 @@ export const CreatorPage: React.FC = () => {
                         </td>
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleStartEdit(p)}
+                              className="px-2.5 py-1.5 bg-white border border-[#E8E9F0] hover:border-[#1A1A18] text-[#1A1A18] rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-xs"
+                              title="Edit Prompt"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-[#8AAAFF]" />
+                              <span>Edit</span>
+                            </button>
                             <Link
                               to={`/prompt/${p.id}`}
                               target="_blank"
