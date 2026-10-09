@@ -12,6 +12,7 @@ import {
   Copy,
   Check,
   Heart,
+  Lock,
 } from 'lucide-react';
 import { usePrompts } from '../context/PromptsContext';
 import { PromptCard } from '../components/PromptCard';
@@ -271,9 +272,72 @@ export const PromptDetailsPage: React.FC = () => {
 
           {activeTab === 'Examples' && (
             <div className="space-y-6">
-              <div className="p-4 sm:p-6 bg-[#1A1A18] text-white rounded-2xl font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto">
-                {prompt.promptTemplate || '/imagine prompt: cyberpunk portrait in Neo-Tokyo --v 6.1 --style raw'}
-              </div>
+              {isSignedIn ? (
+                <div className="relative">
+                  <div className="p-5 sm:p-6 bg-[#1A1A18] text-white rounded-2xl font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto border border-[#2E2E34] selection:bg-[#8AAAFF]/30">
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-[11px] text-white/50">
+                      <span>SYSTEM PROMPT & INSTRUCTION TEMPLATE</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const text = prompt.promptTemplate || prompt.promptSnippet || prompt.description;
+                          navigator.clipboard.writeText(text);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="text-white hover:text-[#8AAAFF] flex items-center gap-1.5 transition-colors cursor-pointer font-sans text-xs font-bold"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy Full Prompt</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <pre className="whitespace-pre-wrap font-mono text-xs sm:text-sm leading-relaxed">
+                      {prompt.promptTemplate || prompt.description}
+                    </pre>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-[#E8E9F0] bg-[#1A1A18] shadow-sm">
+                  {/* Blurred mock preview */}
+                  <div className="p-6 sm:p-8 text-white/30 font-mono text-xs sm:text-sm leading-relaxed blur-md select-none pointer-events-none filter">
+                    <p className="mb-2">// SYSTEM PROMPT & INSTRUCTION TEMPLATE (LOCKED)</p>
+                    <p className="mb-2">You are an expert full-stack AI engineer and system architect. Generate production-ready layouts with responsive architecture, optimized component hierarchies, and interactive states...</p>
+                    <p className="mb-2">Ensure high-fidelity fidelity, type safety, modular structures, and fast zero-latency rendering across all devices...</p>
+                    <p className="mb-2">Include strict validation, resilient recovery mechanisms, and sleek aesthetic design guidelines...</p>
+                    <p>Parameters: --style raw --v 6.1 --temperature 0.7 --seed 98214</p>
+                  </div>
+
+                  {/* Lock Overlay Modal */}
+                  <div className="absolute inset-0 bg-[#1A1A18]/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div className="w-12 h-12 rounded-2xl bg-[#8AAAFF]/10 border border-[#8AAAFF]/30 flex items-center justify-center text-[#8AAAFF] mb-3 shadow-lg">
+                      <Lock className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-display text-lg sm:text-xl font-extrabold text-white mb-1.5">
+                      Prompt Template Locked
+                    </h4>
+                    <p className="text-xs sm:text-sm text-white/70 max-w-md mb-5 leading-relaxed">
+                      Sign in or create a free account to unlock, view, and copy this full prompt template.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openSignIn()}
+                      className="px-6 py-3 bg-[#8AAAFF] hover:bg-[#A3BFFF] text-[#1A1A18] rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-2"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Sign In to Unlock Prompt</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
