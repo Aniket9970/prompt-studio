@@ -88,7 +88,25 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       setIsSupabaseLive(true);
       if (data && Array.isArray(data)) {
-        const mappedPrompts = data.map(mapRowToPrompt);
+        // Exclude initial test prompts and any deleted IDs
+        const deletedIds: string[] = JSON.parse(
+          localStorage.getItem('ps_deleted_prompt_ids') || '[]'
+        );
+        const legacyTestIds = [
+          'ab5fed01-7def-4fda-ae08-2e096d481928',
+          'fb773d9d-3444-412d-b620-04f9cc3b6b92',
+          'cb090fcf-9f6c-45ee-9dd5-820a7dcef230',
+        ];
+
+        const validRows = data.filter((row: any) => {
+          const id = String(row.id);
+          const title = (row.title || '').toLowerCase().trim();
+          if (legacyTestIds.includes(id) || deletedIds.includes(id)) return false;
+          if (title === 'test' || title === 'agent grove system' || title === 'rls test') return false;
+          return true;
+        });
+
+        const mappedPrompts = validRows.map(mapRowToPrompt);
         setPrompts(mappedPrompts);
       }
     } catch (err) {
@@ -192,6 +210,18 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Delete prompt from Supabase backend
   const deletePrompt = async (id: string): Promise<void> => {
+    try {
+      const deletedIds: string[] = JSON.parse(
+        localStorage.getItem('ps_deleted_prompt_ids') || '[]'
+      );
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem('ps_deleted_prompt_ids', JSON.stringify(deletedIds));
+      }
+    } catch (e) {
+      console.warn('Failed to store deleted prompt id:', e);
+    }
+
     setPrompts((prev) => prev.filter((p) => p.id !== id));
 
     if (isSupabaseConfigured) {

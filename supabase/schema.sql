@@ -99,6 +99,14 @@ DROP POLICY IF EXISTS "Allow insert for prompts" ON public.prompts;
 CREATE POLICY "Allow insert for prompts" 
     ON public.prompts FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow update for prompts" ON public.prompts;
+CREATE POLICY "Allow update for prompts" 
+    ON public.prompts FOR UPDATE USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow delete for prompts" ON public.prompts;
+CREATE POLICY "Allow delete for prompts" 
+    ON public.prompts FOR DELETE USING (true);
+
 DROP POLICY IF EXISTS "Allow insert for reviews" ON public.reviews;
 CREATE POLICY "Allow insert for reviews" 
     ON public.reviews FOR INSERT WITH CHECK (true);
