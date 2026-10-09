@@ -21,6 +21,7 @@ import {
   Sliders,
 } from 'lucide-react';
 import { categories } from '../data/prompts';
+import { usePrompts } from '../context/PromptsContext';
 import { InView } from './motion-primitives/in-view';
 import { motion } from 'motion/react';
 
@@ -55,6 +56,8 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
   selectedCategory,
   onSelectCategory,
 }) => {
+  const { prompts } = usePrompts();
+
   return (
     <section id="categories" className="py-8 sm:py-10 border-y border-[#E8E9F0] bg-white/50 backdrop-blur-sm overflow-hidden">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
@@ -87,7 +90,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
                     : 'text-[#8AAAFF] hover:underline'
                 }`}
               >
-                View all ({categories.length})
+                View all ({prompts.length})
               </button>
             </div>
           </div>

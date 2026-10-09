@@ -7,6 +7,7 @@ import { BorderTrail } from './motion-primitives/border-trail';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth, useClerk } from '@clerk/react';
 import { useFavorites } from '../context/FavoritesContext';
+import { usePrompts } from '../context/PromptsContext';
 
 interface PromptCardProps {
   prompt: PromptItem;
@@ -49,6 +50,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { trackPromptCopy } = usePrompts();
   const favorited = isFavorite(prompt.id);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
@@ -78,6 +80,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
 
     const textToCopy = prompt.promptTemplate || prompt.promptSnippet || prompt.description;
     navigator.clipboard.writeText(textToCopy);
+    trackPromptCopy(prompt.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -197,10 +200,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
               <span className="text-[10px] font-black uppercase tracking-widest text-[#8AAAFF] bg-[#8AAAFF]/10 px-2.5 py-0.5 rounded-full">
                 {prompt.typeLabel || prompt.category}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-emerald-500" />
-                Free
-              </span>
             </div>
 
             <h3 className="font-display font-bold text-sm sm:text-base leading-snug mb-1.5 sm:mb-2 text-[#1A1A18] transition-colors group-hover:text-[#8AAAFF]">
@@ -233,8 +232,12 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                FREE
+              <span className={`text-xs font-black px-2 py-0.5 rounded-md ${
+                typeof prompt.price === 'number' && prompt.price > 0
+                  ? 'text-[#1A1A18] bg-[#F0F1F6]'
+                  : 'text-emerald-600 bg-emerald-50'
+              }`}>
+                {typeof prompt.price === 'number' && prompt.price > 0 ? `$${prompt.price}` : 'FREE'}
               </span>
               <Link
                 to={`/prompt/${prompt.id}`}

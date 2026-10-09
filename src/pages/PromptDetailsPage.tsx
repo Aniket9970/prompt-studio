@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
@@ -28,7 +28,7 @@ import { useAuth, useClerk } from '@clerk/react';
 export const PromptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { prompts, getPromptById } = usePrompts();
+  const { prompts, getPromptById, trackPromptCopy, trackPromptView } = usePrompts();
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isSignedIn } = useAuth();
@@ -40,6 +40,12 @@ export const PromptDetailsPage: React.FC = () => {
   // Find prompt by ID or fallback to first prompt
   const prompt = (id ? getPromptById(id) : undefined) || prompts[0];
   const relatedPrompts = prompt ? prompts.filter((p) => p.id !== prompt.id).slice(0, 4) : [];
+
+  useEffect(() => {
+    if (prompt?.id) {
+      trackPromptView(prompt.id);
+    }
+  }, [prompt?.id, trackPromptView]);
 
   if (!prompt) {
     return (
@@ -282,6 +288,7 @@ export const PromptDetailsPage: React.FC = () => {
                         onClick={() => {
                           const text = prompt.promptTemplate || prompt.promptSnippet || prompt.description;
                           navigator.clipboard.writeText(text);
+                          trackPromptCopy(prompt.id);
                           setCopied(true);
                           setTimeout(() => setCopied(false), 2000);
                         }}

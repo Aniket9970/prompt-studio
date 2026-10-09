@@ -33,6 +33,9 @@ interface PromptsContextType {
   resetPrompts: () => Promise<void>;
   getPromptById: (id: string) => PromptItem | undefined;
   refreshPrompts: () => Promise<void>;
+  trackPromptCopy: (id: string) => void;
+  trackPromptView: (id: string) => void;
+  getPromptPopularity: (prompt: PromptItem) => number;
 }
 
 const PromptsContext = createContext<PromptsContextType | undefined>(undefined);
@@ -309,6 +312,93 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return prompts.find((p) => p.id === id);
   };
 
+  // Engagement tracking: Copies & Views
+  const [statsTick, setStatsTick] = useState<number>(0);
+
+  const trackPromptCopy = useCallback((id: string) => {
+    try {
+      const key = `ps_copies_${id}`;
+      const current = parseInt(localStorage.getItem(key) || '0', 10);
+      localStorage.setItem(key, String(current + 1));
+      setStatsTick((t) => t + 1);
+
+      // Optimistically update prompt uses in state
+      setPrompts((prev) =>
+        prev.map((p) => {
+          if (p.id === id) {
+            const currentUses = parseInt(p.uses || '0', 10) || 0;
+            return { ...p, uses: String(currentUses + 1) };
+          }
+          return p;
+        })
+      );
+
+      // Best effort update in Supabase
+      if (isSupabaseConfigured) {
+        Promise.resolve(
+          supabase
+            .rpc('increment_prompt_uses', { prompt_id: id })
+            .then(({ error }) => {
+              if (error) {
+                // Fallback to fetch current uses then increment
+                supabase
+                  .from('prompts')
+                  .select('uses')
+                  .eq('id', id)
+                  .single()
+                  .then(({ data }) => {
+                    const num = parseInt(data?.uses || '0', 10) || 0;
+                    supabase.from('prompts').update({ uses: String(num + 1) }).eq('id', id);
+                  });
+              }
+            })
+        ).catch(() => {});
+      }
+    } catch (e) {
+      console.warn('Could not record prompt copy:', e);
+    }
+  }, []);
+
+  const trackPromptView = useCallback((id: string) => {
+    try {
+      const key = `ps_views_${id}`;
+      const current = parseInt(localStorage.getItem(key) || '0', 10);
+      localStorage.setItem(key, String(current + 1));
+      setStatsTick((t) => t + 1);
+    } catch (e) {
+      console.warn('Could not record prompt view:', e);
+    }
+  }, []);
+
+  const getPromptPopularity = useCallback(
+    (prompt: PromptItem): number => {
+      // Base uses / downloads / likes
+      const rawUses = parseInt(prompt.uses || '0', 10) || 0;
+      const rawDownloads = parseInt(prompt.downloads || '0', 10) || 0;
+      const likes = prompt.likes || 0;
+      const isPopularBonus = prompt.isPopular ? 10 : 0;
+
+      // Realtime local tracking
+      let localCopies = 0;
+      let localViews = 0;
+      try {
+        localCopies = parseInt(localStorage.getItem(`ps_copies_${prompt.id}`) || '0', 10);
+        localViews = parseInt(localStorage.getItem(`ps_views_${prompt.id}`) || '0', 10);
+      } catch {}
+
+      // Popularity score formula: copies count for 5 points, uses count for 3, views for 1, downloads for 2, likes for 3
+      return (
+        localCopies * 5 +
+        rawUses * 3 +
+        localViews * 1 +
+        rawDownloads * 2 +
+        likes * 3 +
+        isPopularBonus
+      );
+    },
+    [statsTick] // recompute when stats tick updates
+  );
+
   return (
     <PromptsContext.Provider
       value={{
@@ -321,6 +411,9 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         resetPrompts,
         getPromptById,
         refreshPrompts: fetchPromptsFromSupabase,
+        trackPromptCopy,
+        trackPromptView,
+        getPromptPopularity,
       }}
     >
       {children}

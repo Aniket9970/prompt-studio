@@ -7,7 +7,7 @@ import { TextLoop } from '../components/motion-primitives/text-loop';
 import { TextEffect } from '../components/motion-primitives/text-effect';
 
 export const BrowsePage: React.FC = () => {
-  const { prompts } = usePrompts();
+  const { prompts, getPromptPopularity } = usePrompts();
   const [search, setSearch] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -80,8 +80,26 @@ export const BrowsePage: React.FC = () => {
       }
 
       return true;
+    }).sort((a, b) => {
+      if (sortBy === 'Popular') {
+        return getPromptPopularity(b) - getPromptPopularity(a);
+      }
+      if (sortBy === 'Newest') {
+        return (b.isRecent ? 1 : 0) - (a.isRecent ? 1 : 0);
+      }
+      if (sortBy === 'PriceLow') {
+        const pA = typeof a.price === 'number' ? a.price : 0;
+        const pB = typeof b.price === 'number' ? b.price : 0;
+        return pA - pB;
+      }
+      if (sortBy === 'PriceHigh') {
+        const pA = typeof a.price === 'number' ? a.price : 0;
+        const pB = typeof b.price === 'number' ? b.price : 0;
+        return pB - pA;
+      }
+      return 0;
     });
-  }, [search, selectedCategories, selectedModels, maxPrice, minRating4]);
+  }, [prompts, search, selectedCategories, selectedModels, maxPrice, minRating4, sortBy, getPromptPopularity]);
 
   const activeFiltersCount = selectedCategories.length + selectedModels.length + (minRating4 ? 1 : 0) + (maxPrice < 100 ? 1 : 0);
 

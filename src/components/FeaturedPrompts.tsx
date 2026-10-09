@@ -7,6 +7,8 @@ import { AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
+import { usePrompts } from '../context/PromptsContext';
+
 interface FeaturedPromptsProps {
   prompts: PromptItem[];
   selectedCategory: string | null;
@@ -21,37 +23,42 @@ export const FeaturedPrompts: React.FC<FeaturedPromptsProps> = ({
   searchQuery,
 }) => {
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
+  const { getPromptPopularity } = usePrompts();
 
-  const filteredPrompts = prompts.filter((p) => {
-    // Search query filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch =
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.creator.name.toLowerCase().includes(q) ||
-        p.creator.handle.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q);
-      if (!matchesSearch) return false;
-    }
-
-    // Category filter
-    if (selectedCategory && selectedCategory.toLowerCase() !== 'all') {
-      if (p.category.toLowerCase() !== selectedCategory.toLowerCase()) {
-        return false;
+  const filteredPrompts = prompts
+    .filter((p) => {
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesSearch =
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.creator.name.toLowerCase().includes(q) ||
+          p.creator.handle.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q);
+        if (!matchesSearch) return false;
       }
-    }
 
-    // Tab filter
-    if (activeTab === 'Popular') {
-      return p.isPopular ?? true;
-    }
-    if (activeTab === 'Free') {
-      return p.price === 'Free';
-    }
+      // Category filter
+      if (selectedCategory && selectedCategory.toLowerCase() !== 'all') {
+        if (p.category.toLowerCase() !== selectedCategory.toLowerCase()) {
+          return false;
+        }
+      }
 
-    return true;
-  });
+      // Tab filter
+      if (activeTab === 'Free') {
+        return p.price === 'Free';
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (activeTab === 'Popular') {
+        return getPromptPopularity(b) - getPromptPopularity(a);
+      }
+      return 0;
+    });
 
   return (
     <section id="featured" className="py-12 sm:py-20 md:py-24 bg-[#FFFEFB]">
