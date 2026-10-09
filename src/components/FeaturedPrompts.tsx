@@ -36,8 +36,10 @@ export const FeaturedPrompts: React.FC<FeaturedPromptsProps> = ({
     }
 
     // Category filter
-    if (selectedCategory && p.category !== selectedCategory) {
-      return false;
+    if (selectedCategory && selectedCategory.toLowerCase() !== 'all') {
+      if (p.category.toLowerCase() !== selectedCategory.toLowerCase()) {
+        return false;
+      }
     }
 
     // Tab filter

@@ -53,7 +53,10 @@ export const BrowsePage: React.FC = () => {
       }
 
       // Categories
-      if (selectedCategories.length > 0 && !selectedCategories.includes(prompt.category)) {
+      if (
+        selectedCategories.length > 0 &&
+        !selectedCategories.some((sc) => sc.toLowerCase() === prompt.category.toLowerCase())
+      ) {
         return false;
       }
 
