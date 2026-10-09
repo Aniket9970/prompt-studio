@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from '@clerk/react';
 import { PromptItem, CartItem, OrderRecord } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface CartContextType {
   cart: CartItem[];
@@ -16,19 +18,24 @@ interface CartContextType {
   lastOrderItems: CartItem[];
   orderId: string;
   orders: OrderRecord[];
-  addOrder: (items: CartItem[], total: number, paymentMethod?: string) => string;
-  deleteOrder: (orderId: string) => void;
-  deletePromptFromOrder: (orderId: string, promptId: string) => void;
-  clearOrders: () => void;
+  isLoadingOrders: boolean;
+  addOrder: (items: CartItem[], total: number, paymentMethod?: string) => Promise<string>;
+  deleteOrder: (orderId: string) => Promise<void>;
+  deletePromptFromOrder: (orderId: string, promptId: string) => Promise<void>;
+  clearOrders: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Cart is empty by default so no unwanted prompts appear in cart on load/login
+  const { userId, isSignedIn } = useAuth();
+
+  const cartStorageKey = userId ? `ps_cart_${userId}` : 'ps_cart_guest';
+  const ordersStorageKey = userId ? `ps_orders_${userId}` : 'ps_orders_guest';
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
-      const saved = localStorage.getItem('ps_cart');
+      const saved = localStorage.getItem(userId ? `ps_cart_${userId}` : 'ps_cart_guest');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
@@ -44,42 +51,75 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [promoError, setPromoError] = useState<string | null>(null);
   const [lastOrderItems, setLastOrderItems] = useState<CartItem[]>([]);
   const [orderId, setOrderId] = useState<string>('');
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
 
-  // Orders stored in state and localStorage - NO dummy data
-  const [orders, setOrders] = useState<OrderRecord[]>(() => {
-    try {
-      const saved = localStorage.getItem('ps_orders');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          // Filter out any legacy dummy order PS-884210
-          return parsed.filter((order) => order.id !== 'PS-884210');
+  // When user signs in or switches account, fetch their specific orders from Supabase
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!isSignedIn || !userId) {
+      // Clear personal orders when logged out
+      setOrders([]);
+      return;
+    }
+
+    const fetchUserOrders = async () => {
+      setIsLoadingOrders(true);
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (!error && data && !isCancelled) {
+          const mappedOrders: OrderRecord[] = data.map((row) => ({
+            id: row.id,
+            date: new Date(row.created_at).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+            items: (row.items as CartItem[]) || [],
+            subtotal: Number(row.subtotal) || 0,
+            discount: Number(row.discount) || 0,
+            total: Number(row.total) || 0,
+            status: (row.status as 'Completed' | 'Processing') || 'Completed',
+            paymentMethod: row.payment_method || 'Credit Card',
+          }));
+
+          setOrders(mappedOrders);
+          try {
+            localStorage.setItem(ordersStorageKey, JSON.stringify(mappedOrders));
+          } catch {
+            // ignore
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching orders from Supabase:', err);
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingOrders(false);
         }
       }
-    } catch {
-      // ignore
-    }
-    return [];
-  });
+    };
 
-  // Sync cart to localStorage
+    fetchUserOrders();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [userId, isSignedIn, ordersStorageKey]);
+
+  // Sync cart scoped per user
   useEffect(() => {
     try {
-      localStorage.setItem('ps_cart', JSON.stringify(cart));
+      localStorage.setItem(cartStorageKey, JSON.stringify(cart));
     } catch {
       // ignore
     }
-  }, [cart]);
-
-  // Sync orders to localStorage (and cleanse any dummy PS-884210)
-  useEffect(() => {
-    try {
-      const cleaned = orders.filter((o) => o.id !== 'PS-884210');
-      localStorage.setItem('ps_orders', JSON.stringify(cleaned));
-    } catch {
-      // ignore
-    }
-  }, [orders]);
+  }, [cart, cartStorageKey]);
 
   const addToCart = (prompt: PromptItem) => {
     setCart((prev) => {
@@ -95,10 +135,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCart((prev) => prev.filter((item) => item.prompt.id !== promptId));
   };
 
-  const addOrder = (items: CartItem[], orderTotal: number, paymentMethod = 'Credit Card') => {
-    const newOrderId = `PS-${Math.floor(100000 + Math.random() * 900000)}`;
+  const addOrder = async (items: CartItem[], orderTotal: number, paymentMethod = 'Credit Card'): Promise<string> => {
+    const fallbackId = `PS-${Math.floor(100000 + Math.random() * 900000)}`;
+    const effectiveUserId = userId || 'guest';
+
     const newOrder: OrderRecord = {
-      id: newOrderId,
+      id: fallbackId,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       items: [...items],
       subtotal,
@@ -107,43 +149,113 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: 'Completed',
       paymentMethod,
     };
-    setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== 'PS-884210')]);
-    setOrderId(newOrderId);
+
+    // Optimistically update local state
+    setOrders((prev) => [newOrder, ...prev]);
+    setOrderId(fallbackId);
     setLastOrderItems([...items]);
-    return newOrderId;
+
+    // Save to Supabase tied to this specific Clerk user
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([
+          {
+            user_id: effectiveUserId,
+            subtotal,
+            discount,
+            total: orderTotal,
+            status: 'Completed',
+            payment_method: paymentMethod,
+            items: items,
+          },
+        ])
+        .select()
+        .single();
+
+      if (!error && data) {
+        const persistedId = data.id;
+        setOrderId(persistedId);
+        setOrders((prev) => prev.map((o) => (o.id === fallbackId ? { ...o, id: persistedId } : o)));
+        return persistedId;
+      }
+    } catch (err) {
+      console.warn('Could not persist order to Supabase:', err);
+    }
+
+    return fallbackId;
   };
 
-  const deleteOrder = (orderIdToDelete: string) => {
+  const deleteOrder = async (orderIdToDelete: string) => {
     setOrders((prev) => prev.filter((order) => order.id !== orderIdToDelete));
+    if (userId) {
+      try {
+        await supabase.from('orders').delete().eq('id', orderIdToDelete).eq('user_id', userId);
+      } catch (err) {
+        console.warn('Could not delete order from Supabase:', err);
+      }
+    }
   };
 
-  const deletePromptFromOrder = (orderIdTarget: string, promptIdToDelete: string) => {
+  const deletePromptFromOrder = async (orderIdTarget: string, promptIdToDelete: string) => {
+    const targetOrder = orders.find((o) => o.id === orderIdTarget);
+    if (!targetOrder) return;
+
+    const updatedItems = targetOrder.items.filter((item) => item.prompt.id !== promptIdToDelete);
+    if (updatedItems.length === 0) {
+      await deleteOrder(orderIdTarget);
+      return;
+    }
+
+    const newSubtotal = updatedItems.reduce((acc, item) => {
+      const price = typeof item.prompt.price === 'number' ? item.prompt.price : 0;
+      return acc + price * item.quantity;
+    }, 0);
+    const newTotal = Math.max(0, newSubtotal - targetOrder.discount);
+
     setOrders((prev) =>
-      prev
-        .map((order) => {
-          if (order.id !== orderIdTarget) return order;
-          const updatedItems = order.items.filter((item) => item.prompt.id !== promptIdToDelete);
-          const newSubtotal = updatedItems.reduce((acc, item) => {
-            const price = typeof item.prompt.price === 'number' ? item.prompt.price : 0;
-            return acc + price * item.quantity;
-          }, 0);
-          return {
-            ...order,
+      prev.map((order) =>
+        order.id === orderIdTarget
+          ? {
+              ...order,
+              items: updatedItems,
+              subtotal: newSubtotal,
+              total: newTotal,
+            }
+          : order
+      )
+    );
+
+    if (userId) {
+      try {
+        await supabase
+          .from('orders')
+          .update({
             items: updatedItems,
             subtotal: newSubtotal,
-            total: Math.max(0, newSubtotal - order.discount),
-          };
-        })
-        .filter((order) => order.items.length > 0)
-    );
+            total: newTotal,
+          })
+          .eq('id', orderIdTarget)
+          .eq('user_id', userId);
+      } catch (err) {
+        console.warn('Could not update order in Supabase:', err);
+      }
+    }
   };
 
-  const clearOrders = () => {
+  const clearOrders = async () => {
     setOrders([]);
     try {
-      localStorage.removeItem('ps_orders');
+      localStorage.removeItem(ordersStorageKey);
     } catch {
       // ignore
+    }
+    if (userId) {
+      try {
+        await supabase.from('orders').delete().eq('user_id', userId);
+      } catch (err) {
+        console.warn('Could not clear orders in Supabase:', err);
+      }
     }
   };
 
@@ -153,7 +265,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setCart([]);
     try {
-      localStorage.removeItem('ps_cart');
+      localStorage.removeItem(cartStorageKey);
     } catch {
       // ignore
     }
@@ -188,7 +300,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, 0);
 
   const discount = Number((subtotal * discountRate).toFixed(2));
-  const tax = 0.00;
+  const tax = 0.0;
   const total = Math.max(0, Number((subtotal - discount + tax).toFixed(2)));
 
   return (
@@ -208,6 +320,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         lastOrderItems,
         orderId,
         orders,
+        isLoadingOrders,
         addOrder,
         deleteOrder,
         deletePromptFromOrder,

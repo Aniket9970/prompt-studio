@@ -25,10 +25,10 @@ export const CheckoutPage: React.FC = () => {
 
   const tax = 0.00; // Tax is estimated at $0.00 in the design
 
-  const handleCompletePurchase = (e: React.FormEvent) => {
+  const handleCompletePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length > 0) {
-      addOrder(cart, total, paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Apple Pay');
+      await addOrder(cart, total, paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Apple Pay');
       clearCart();
     }
     navigate('/confirmation');
