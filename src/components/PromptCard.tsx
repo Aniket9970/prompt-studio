@@ -83,13 +83,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   };
 
   return (
-    <div ref={cardRef} className="h-full w-full [content-visibility:auto] [contain-intrinsic-size:380px_450px]">
+    <div ref={cardRef} className="h-full w-full [content-visibility:auto] [contain-intrinsic-size:300px_400px] sm:[contain-intrinsic-size:380px_450px]">
       <Tilt
         rotationFactor={5}
         isRevese={false}
         className="h-full flex"
       >
-        <div className="group relative w-full bg-white border border-[#E8E9F0] rounded-[28px] overflow-hidden card-shadow flex flex-col hover:-translate-y-1 transition-transform duration-200">
+        <div className="group relative w-full bg-white border border-[#E8E9F0] rounded-[22px] sm:rounded-[28px] overflow-hidden card-shadow flex flex-col hover:-translate-y-1 transition-transform duration-200">
           {/* Subtle animated border trail on popular prompts when hovered */}
           {prompt.isPopular && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -108,7 +108,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
               type="button"
               onClick={handleToggleFavorite}
               title={favorited ? 'Remove from favourites' : 'Add to favourites'}
-              className="absolute top-3 left-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center transition-all duration-200 active:scale-90 group/fav"
+              className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center transition-all duration-200 active:scale-90 group/fav"
             >
               <Heart
                 className={`w-4 h-4 transition-transform duration-200 group-hover/fav:scale-110 ${
@@ -150,7 +150,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
             onClick={handleCopyPrompt}
             type="button"
             title="Copy prompt to clipboard"
-            className={`absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-md backdrop-blur-md ${
+            className={`absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-md backdrop-blur-md ${
               copied
                 ? 'bg-emerald-500 text-white shadow-emerald-500/20'
                 : 'bg-white/95 text-[#1A1A18] hover:bg-white hover:scale-105 active:scale-95 border border-[#E8E9F0]'
@@ -184,14 +184,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
           </button>
 
           {/* Tag Pill */}
-          <div className="absolute top-3 right-3 px-2.5 py-1 bg-white/90 backdrop-blur-md rounded-xl text-[10px] font-black tracking-wider text-[#1A1A18] uppercase shadow-sm border border-[#E8E9F0]/60 pointer-events-none z-10 flex items-center gap-1">
+          <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 px-2 sm:px-2.5 py-1 bg-white/90 backdrop-blur-md rounded-xl text-[9px] sm:text-[10px] font-black tracking-wider text-[#1A1A18] uppercase shadow-sm border border-[#E8E9F0]/60 pointer-events-none z-10 flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-[#8AAAFF]" />
             <span>{prompt.category}</span>
           </div>
         </div>
 
         {/* Details Area */}
-        <div className="p-6 flex flex-col flex-1 justify-between">
+        <div className="p-4 sm:p-6 flex flex-col flex-1 justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-[#8AAAFF] bg-[#8AAAFF]/10 px-2.5 py-0.5 rounded-full">
@@ -203,13 +203,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
               </span>
             </div>
 
-            <h3 className="font-display font-bold text-base leading-snug mb-2 text-[#1A1A18] transition-colors group-hover:text-[#8AAAFF]">
+            <h3 className="font-display font-bold text-sm sm:text-base leading-snug mb-1.5 sm:mb-2 text-[#1A1A18] transition-colors group-hover:text-[#8AAAFF]">
               <Link to={`/prompt/${prompt.id}`} className="hover:underline underline-offset-2 line-clamp-1">
                 {prompt.title}
               </Link>
             </h3>
 
-            <p className="text-xs text-[#6B6D75] line-clamp-2 leading-relaxed mb-4">
+            <p className="text-xs text-[#6B6D75] line-clamp-2 leading-relaxed mb-3 sm:mb-4">
               {prompt.description}
             </p>
           </div>
@@ -220,10 +220,10 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
                 <img
                   src={prompt.creator.avatarUrl}
                   alt={prompt.creator.name}
-                  className="w-6 h-6 rounded-full object-cover border border-[#E8E9F0]"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-[#E8E9F0]"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-[#E8E9F0] flex items-center justify-center text-[10px] font-bold text-[#8B8E9A]">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#E8E9F0] flex items-center justify-center text-[10px] font-bold text-[#8B8E9A]">
                   {prompt.creator.name.charAt(0)}
                 </div>
               )}

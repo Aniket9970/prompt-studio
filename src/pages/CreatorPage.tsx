@@ -17,9 +17,14 @@ import {
   FileCode,
   ArrowLeft,
   LogIn,
-  AlertTriangle
+  AlertTriangle,
+  Upload,
+  Film,
+  X,
+  Database
 } from 'lucide-react';
 import { usePrompts, DEFAULT_STUDIO_CREATOR } from '../context/PromptsContext';
+import { uploadMediaToSupabase } from '../lib/supabase';
 import { categories } from '../data/prompts';
 import { PromptCard } from '../components/PromptCard';
 import { PromptItem } from '../types';
@@ -31,7 +36,7 @@ export const AUTHORIZED_CREATOR_EMAIL = 'aniketkhatkhede123@gmail.com';
 export const CREATOR_PASSKEY = '9970@Aniket';
 
 export const CreatorPage: React.FC = () => {
-  const { prompts, addPrompt, deletePrompt, resetPrompts } = usePrompts();
+  const { prompts, isSupabaseLive, addPrompt, deletePrompt, resetPrompts } = usePrompts();
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -64,6 +69,50 @@ export const CreatorPage: React.FC = () => {
   const [price, setPrice] = useState('19');
   const [previewVideo, setPreviewVideo] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [videoSourceMode, setVideoSourceMode] = useState<'device' | 'url'>('device');
+  const [uploadedVideoName, setUploadedVideoName] = useState<string>('');
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [videoLoading, setVideoLoading] = useState<boolean>(false);
+  const [imageSourceMode, setImageSourceMode] = useState<'device' | 'url'>('url');
+  const [uploadedImageName, setUploadedImageName] = useState<string>('');
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [isPublishing, setIsPublishing] = useState<boolean>(false);
+
+  const handleVideoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedVideoFile(file);
+    setVideoLoading(true);
+    setUploadedVideoName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setPreviewVideo(dataUrl);
+      setVideoLoading(false);
+    };
+    reader.onerror = () => {
+      alert('Error reading video file. Please try another file.');
+      setVideoLoading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedImageFile(file);
+    setUploadedImageName(file.name);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setImageUrl(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const [promptTemplate, setPromptTemplate] = useState('');
   const [isPopular, setIsPopular] = useState(true);
 
@@ -95,43 +144,83 @@ export const CreatorPage: React.FC = () => {
     sessionStorage.removeItem('ps_creator_passkey_verified');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim() || !promptTemplate.trim()) {
       alert('Please fill in Title, Description, and Prompt Template.');
       return;
     }
 
-    const keyFeatures = [
-      { title: feat1Title, subtitle: feat1Sub, icon: 'Sparkles' },
-      { title: feat2Title, subtitle: feat2Sub, icon: 'Layers' },
-      { title: feat3Title, subtitle: feat3Sub, icon: 'Zap' },
-    ];
+    setIsPublishing(true);
 
-    const newPrompt = addPrompt({
-      title: title.trim(),
-      description: description.trim(),
-      category: category,
-      model: model.trim() || 'AI APP',
-      typeLabel: typeLabel.trim() || 'Web App',
-      price: isFree ? 'Free' : (parseFloat(price) || 19),
-      previewVideo: previewVideo.trim() || undefined,
-      imageUrl: imageUrl.trim() || undefined,
-      promptTemplate: promptTemplate.trim(),
-      isPopular,
-      keyFeatures,
-    });
+    try {
+      let finalVideoUrl = previewVideo.trim() || undefined;
+      let finalImageUrl = imageUrl.trim() || undefined;
 
-    setSuccessMessage(`Prompt "${newPrompt.title}" successfully published!`);
-    setTimeout(() => setSuccessMessage(null), 4000);
+      // 1. Upload video file to Supabase Storage if picked from device
+      if (selectedVideoFile) {
+        const { url: supabaseVideoUrl, error: videoUploadError } = await uploadMediaToSupabase(
+          selectedVideoFile,
+          'videos'
+        );
+        if (supabaseVideoUrl) {
+          finalVideoUrl = supabaseVideoUrl;
+        } else if (videoUploadError) {
+          console.warn('Supabase storage upload notice (using fallback preview):', videoUploadError);
+        }
+      }
 
-    // Reset Form
-    setTitle('');
-    setDescription('');
-    setPromptTemplate('');
-    setPreviewVideo('');
-    setImageUrl('');
-    setActiveTab('manage');
+      // 2. Upload image file to Supabase Storage if picked from device
+      if (selectedImageFile) {
+        const { url: supabaseImageUrl } = await uploadMediaToSupabase(
+          selectedImageFile,
+          'images'
+        );
+        if (supabaseImageUrl) {
+          finalImageUrl = supabaseImageUrl;
+        }
+      }
+
+      const keyFeatures = [
+        { title: feat1Title, subtitle: feat1Sub, icon: 'Sparkles' },
+        { title: feat2Title, subtitle: feat2Sub, icon: 'Layers' },
+        { title: feat3Title, subtitle: feat3Sub, icon: 'Zap' },
+      ];
+
+      // 3. Save prompt record to Supabase database
+      const newPrompt = await addPrompt({
+        title: title.trim(),
+        description: description.trim(),
+        category: category,
+        model: model.trim() || 'AI APP',
+        typeLabel: typeLabel.trim() || 'Web App',
+        price: isFree ? 'Free' : (parseFloat(price) || 19),
+        previewVideo: finalVideoUrl,
+        imageUrl: finalImageUrl,
+        promptTemplate: promptTemplate.trim(),
+        isPopular,
+        keyFeatures,
+      });
+
+      setSuccessMessage(`Prompt "${newPrompt.title}" & video successfully saved to Supabase backend!`);
+      setTimeout(() => setSuccessMessage(null), 5000);
+
+      // Reset Form
+      setTitle('');
+      setDescription('');
+      setPromptTemplate('');
+      setPreviewVideo('');
+      setImageUrl('');
+      setUploadedVideoName('');
+      setUploadedImageName('');
+      setSelectedVideoFile(null);
+      setSelectedImageFile(null);
+      setActiveTab('manage');
+    } catch (err: any) {
+      alert(`Error saving prompt: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   // Preview Prompt Object for Live Card
@@ -336,41 +425,49 @@ export const CreatorPage: React.FC = () => {
 
   // 5. UNLOCKED CREATOR STUDIO (Authorized Email + Correct Passkey)
   return (
-    <div className="min-h-screen bg-[#FFFEFB] pt-8 pb-32">
-      <div className="max-w-[1240px] mx-auto px-6">
+    <div className="min-h-screen bg-[#FFFEFB] pt-6 sm:pt-8 pb-24 sm:pb-32">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Top Control Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 mb-8 border-b border-[#E8E9F0]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 sm:pb-8 mb-6 sm:mb-8 border-b border-[#E8E9F0]">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-[#1A1A18] text-white flex items-center justify-center text-xs font-bold">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <span className="w-8 h-8 rounded-lg bg-[#1A1A18] text-white flex items-center justify-center text-xs font-bold shrink-0">
                 PS
               </span>
-              <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#1A1A18]">
+              <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold text-[#1A1A18]">
                 Creator Studio Dashboard
               </h1>
-              <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" /> Aniket Verified
               </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 border ${
+                isSupabaseLive
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                  : 'bg-amber-50 text-amber-700 border-amber-200'
+              }`}>
+                <Database className="w-3 h-3" />
+                {isSupabaseLive ? 'Supabase Connected' : 'Offline Cache'}
+              </span>
             </div>
-            <p className="text-sm text-[#6B6D75] mt-1">
-              Logged in as <strong className="text-[#1A1A18]">{AUTHORIZED_CREATOR_EMAIL}</strong> • All prompts publish under author: <strong className="text-[#1A1A18]">PROMPT STUDIO (Official)</strong>
+            <p className="text-xs sm:text-sm text-[#6B6D75] mt-1.5 break-all">
+              Logged in as <strong className="text-[#1A1A18]">{AUTHORIZED_CREATOR_EMAIL}</strong> • All prompts & videos sync directly to <strong className="text-[#1A1A18]">Supabase Backend</strong>
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <Link
               to="/browse"
               target="_blank"
-              className="px-4 py-2 text-xs font-bold bg-white border border-[#E8E9F0] text-[#1A1A18] rounded-xl hover:bg-[#F7F8FC] transition-colors flex items-center gap-1.5"
+              className="flex-1 sm:flex-initial justify-center px-4 py-2 text-xs font-bold bg-white border border-[#E8E9F0] text-[#1A1A18] rounded-xl hover:bg-[#F7F8FC] transition-colors flex items-center gap-1.5"
             >
               <Eye className="w-3.5 h-3.5 text-[#8AAAFF]" />
-              <span>View Live Marketplace</span>
+              <span>Live Site</span>
             </Link>
 
             <button
               onClick={handleLockSession}
-              className="px-4 py-2 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="flex-1 sm:flex-initial justify-center px-4 py-2 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Lock Creator Studio Session"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -386,11 +483,11 @@ export const CreatorPage: React.FC = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-8 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center justify-between"
+              className="mb-6 sm:mb-8 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <span className="text-sm font-bold">{successMessage}</span>
+                <span className="text-xs sm:text-sm font-bold">{successMessage}</span>
               </div>
               <button
                 onClick={() => setSuccessMessage(null)}
@@ -403,51 +500,51 @@ export const CreatorPage: React.FC = () => {
         </AnimatePresence>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 mb-8 bg-[#F7F8FC] p-1.5 rounded-2xl border border-[#E8E9F0] w-fit">
+        <div className="flex items-center gap-2 mb-6 sm:mb-8 bg-[#F7F8FC] p-1.5 rounded-2xl border border-[#E8E9F0] w-full sm:w-fit overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-1.5">
           <button
             onClick={() => setActiveTab('upload')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'upload'
                 ? 'bg-white text-[#1A1A18] shadow-sm border border-[#E8E9F0]'
                 : 'text-[#6B6D75] hover:text-[#1A1A18]'
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Upload New Prompt</span>
+            <span>Upload New</span>
           </button>
 
           <button
             onClick={() => setActiveTab('manage')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'manage'
                 ? 'bg-white text-[#1A1A18] shadow-sm border border-[#E8E9F0]'
                 : 'text-[#6B6D75] hover:text-[#1A1A18]'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Manage Published ({prompts.length})</span>
+            <span>Manage ({prompts.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('code-export')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'code-export'
                 ? 'bg-white text-[#1A1A18] shadow-sm border border-[#E8E9F0]'
                 : 'text-[#6B6D75] hover:text-[#1A1A18]'
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
-            <span>Code Export / Backup</span>
+            <span>Code Export</span>
           </button>
         </div>
 
         {/* TAB 1: UPLOAD NEW PROMPT */}
         {activeTab === 'upload' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10">
             {/* Left: Input Form (7 cols) */}
-            <div className="lg:col-span-7 bg-white rounded-3xl border border-[#E8E9F0] p-8 card-shadow">
+            <div className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl border border-[#E8E9F0] p-5 sm:p-8 card-shadow">
               <div className="mb-6 pb-6 border-b border-[#F0F1F6]">
-                <h2 className="font-display text-xl font-extrabold text-[#1A1A18] flex items-center gap-2">
+                <h2 className="font-display text-lg sm:text-xl font-extrabold text-[#1A1A18] flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-[#8AAAFF]" />
                   Prompt Details & Publishing Form
                 </h2>
@@ -601,32 +698,165 @@ export const CreatorPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Media (Video preview or Image) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#1A1A18] mb-2">
-                      Preview Video URL (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. /previews/Agent Grove.mp4 or https://..."
-                      value={previewVideo}
-                      onChange={(e) => setPreviewVideo(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-mono outline-none"
-                    />
+                {/* Media Section: Video Preview with Device Upload */}
+                <div className="p-5 bg-[#F7F8FC] rounded-2xl border border-[#E8E9F0] space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#1A1A18]">
+                        Preview Video (Interactive Card & Details Page)
+                      </label>
+                      <p className="text-[11px] text-[#6B6D75]">
+                        Upload directly from this device or provide a video URL
+                      </p>
+                    </div>
+
+                    {/* Mode Toggle */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E8E9F0] self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setVideoSourceMode('device')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          videoSourceMode === 'device'
+                            ? 'bg-[#1A1A18] text-white shadow-sm'
+                            : 'text-[#6B6D75] hover:text-[#1A1A18]'
+                        }`}
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload from Device</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setVideoSourceMode('url')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          videoSourceMode === 'url'
+                            ? 'bg-[#1A1A18] text-white shadow-sm'
+                            : 'text-[#6B6D75] hover:text-[#1A1A18]'
+                        }`}
+                      >
+                        <Film className="w-3.5 h-3.5" />
+                        <span>Video URL / Path</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#1A1A18] mb-2">
-                      Cover Image URL (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. https://images.unsplash.com/..."
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-mono outline-none"
-                    />
+                  {videoSourceMode === 'device' ? (
+                    <div>
+                      {previewVideo && uploadedVideoName ? (
+                        <div className="p-4 bg-white rounded-xl border border-emerald-200 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                              <Film className="w-5 h-5" />
+                            </div>
+                            <div className="truncate">
+                              <p className="text-xs font-bold text-[#1A1A18] truncate">{uploadedVideoName}</p>
+                              <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" /> Video ready from device
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewVideo('');
+                              setUploadedVideoName('');
+                            }}
+                            className="p-2 text-[#8B8E9A] hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Remove uploaded video"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="border-2 border-dashed border-[#CBD0DF] hover:border-[#1A1A18] bg-white rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors group text-center">
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
+                            onChange={handleVideoFileUpload}
+                            className="hidden"
+                          />
+                          <div className="w-12 h-12 bg-[#F7F8FC] group-hover:bg-[#1A1A18] text-[#1A1A18] group-hover:text-white rounded-2xl flex items-center justify-center mb-3 transition-colors shadow-sm">
+                            <Upload className="w-5 h-5" />
+                          </div>
+                          <span className="text-xs font-bold text-[#1A1A18] mb-1">
+                            Click to select video from this device
+                          </span>
+                          <span className="text-[11px] text-[#8B8E9A]">
+                            Supports MP4, WebM, MOV video previews
+                          </span>
+                          {videoLoading && (
+                            <span className="mt-2 text-xs font-bold text-[#8AAAFF] animate-pulse">
+                              Loading video from device...
+                            </span>
+                          )}
+                        </label>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="e.g. /previews/Agent Grove.mp4 or https://cdn.example.com/demo.mp4"
+                        value={previewVideo}
+                        onChange={(e) => {
+                          setPreviewVideo(e.target.value);
+                          setUploadedVideoName('');
+                        }}
+                        className="w-full px-4 py-3 rounded-xl border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-mono outline-none bg-white"
+                      />
+                    </div>
+                  )}
+
+                  {/* Fallback / Cover Image Option */}
+                  <div className="pt-3 border-t border-[#E8E9F0]">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#1A1A18]">
+                        Cover Image (Fallback / Poster)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setImageSourceMode(imageSourceMode === 'device' ? 'url' : 'device')}
+                        className="text-[11px] text-[#8B8E9A] hover:text-[#1A1A18] font-bold underline cursor-pointer"
+                      >
+                        {imageSourceMode === 'device' ? 'Switch to Image URL' : 'Upload Image from Device'}
+                      </button>
+                    </div>
+
+                    {imageSourceMode === 'device' ? (
+                      <div className="flex items-center gap-3">
+                        <label className="px-4 py-2.5 bg-white border border-[#E8E9F0] hover:border-[#1A1A18] rounded-xl text-xs font-bold text-[#1A1A18] cursor-pointer flex items-center gap-2">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{uploadedImageName || 'Select image from device'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        {imageUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImageUrl('');
+                              setUploadedImageName('');
+                            }}
+                            className="text-xs text-rose-600 hover:underline font-bold cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="e.g. https://images.unsplash.com/photo-..."
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-mono outline-none bg-white"
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -713,10 +943,20 @@ export const CreatorPage: React.FC = () => {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full py-4 bg-[#1A1A18] hover:bg-[#333333] text-white rounded-2xl font-bold text-sm uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={isPublishing}
+                  className="w-full py-4 bg-[#1A1A18] hover:bg-[#333333] disabled:bg-[#555555] text-white rounded-2xl font-bold text-sm uppercase tracking-wider transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Publish Prompt to Website</span>
+                  {isPublishing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Saving Prompt & Media to Supabase...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Publish Prompt to Website</span>
+                    </>
+                  )}
                 </button>
               </form>
             </div>
@@ -758,10 +998,10 @@ export const CreatorPage: React.FC = () => {
 
         {/* TAB 2: MANAGE PUBLISHED PROMPTS */}
         {activeTab === 'manage' && (
-          <div className="bg-white rounded-3xl border border-[#E8E9F0] p-8 card-shadow">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#F0F1F6]">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E8E9F0] p-5 sm:p-8 card-shadow">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-6 border-b border-[#F0F1F6]">
               <div>
-                <h2 className="font-display text-xl font-extrabold text-[#1A1A18]">
+                <h2 className="font-display text-lg sm:text-xl font-extrabold text-[#1A1A18]">
                   Published Prompts Catalog ({prompts.length})
                 </h2>
                 <p className="text-xs text-[#6B6D75] mt-1">
@@ -785,11 +1025,11 @@ export const CreatorPage: React.FC = () => {
             </div>
 
             {prompts.length === 0 ? (
-              <div className="text-center py-20 bg-[#F7F8FC] rounded-2xl border border-[#E8E9F0]">
+              <div className="text-center py-14 sm:py-20 bg-[#F7F8FC] rounded-2xl border border-[#E8E9F0] px-4">
                 <div className="w-12 h-12 bg-white rounded-xl border border-[#E8E9F0] flex items-center justify-center mx-auto mb-4 text-[#8B8E9A]">
                   <Sparkles className="w-6 h-6 text-[#8AAAFF]" />
                 </div>
-                <h3 className="text-lg font-bold text-[#1A1A18] mb-1">
+                <h3 className="text-base sm:text-lg font-bold text-[#1A1A18] mb-1">
                   No Prompts Published Yet
                 </h3>
                 <p className="text-xs text-[#6B6D75] max-w-sm mx-auto mb-6">
@@ -803,8 +1043,8 @@ export const CreatorPage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0">
+                <table className="w-full text-left text-xs min-w-[640px]">
                   <thead>
                     <tr className="border-b border-[#E8E9F0] text-[#8B8E9A] uppercase tracking-wider font-bold">
                       <th className="py-3 px-4">Title & Description</th>
@@ -877,10 +1117,10 @@ export const CreatorPage: React.FC = () => {
 
         {/* TAB 3: CODE EXPORT */}
         {activeTab === 'code-export' && (
-          <div className="bg-white rounded-3xl border border-[#E8E9F0] p-8 card-shadow">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E8E9F0] p-5 sm:p-8 card-shadow">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
-                <h2 className="font-display text-xl font-extrabold text-[#1A1A18]">
+                <h2 className="font-display text-lg sm:text-xl font-extrabold text-[#1A1A18]">
                   Permanent Code Export (Git / File Sync)
                 </h2>
                 <p className="text-xs text-[#6B6D75] mt-1">
@@ -894,7 +1134,7 @@ export const CreatorPage: React.FC = () => {
                   setCopiedCode(true);
                   setTimeout(() => setCopiedCode(false), 2000);
                 }}
-                className="px-4 py-2.5 bg-[#1A1A18] hover:bg-[#333333] text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer"
+                className="w-full sm:w-auto justify-center px-4 py-2.5 bg-[#1A1A18] hover:bg-[#333333] text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer"
               >
                 {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedCode ? 'Copied Code!' : 'Copy Code'}</span>

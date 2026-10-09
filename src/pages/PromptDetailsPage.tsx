@@ -6,9 +6,6 @@ import {
   StarHalf,
   BadgeCheck,
   Zap,
-  Camera,
-  Sun,
-  Layout,
   ShoppingCart,
   Info,
   Twitter,
@@ -79,31 +76,31 @@ export const PromptDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#FFFEFB] pb-32">
+    <div className="bg-[#FFFEFB] pb-28 sm:pb-32">
       {/* Breadcrumb & Preview Header */}
-      <div className="max-w-[1240px] mx-auto px-8 pt-8">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-8 pt-4 sm:pt-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs font-bold text-[#1A1A18]/30 uppercase tracking-widest mb-8">
-          <Link to="/" className="hover:text-[#1A1A18] transition-colors">
+        <nav className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold text-[#1A1A18]/40 uppercase tracking-widest mb-6 sm:mb-8 overflow-hidden text-ellipsis whitespace-nowrap">
+          <Link to="/" className="hover:text-[#1A1A18] transition-colors shrink-0">
             Home
           </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <Link to="/browse" className="hover:text-[#1A1A18] transition-colors">
+          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+          <Link to="/browse" className="hover:text-[#1A1A18] transition-colors shrink-0">
             Marketplace
           </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-[#1A1A18]/60">{prompt.title}</span>
+          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-[#1A1A18]/70 truncate">{prompt.title}</span>
         </nav>
 
         {/* Hero Preview Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-12 sm:mb-20">
           {/* Left: 16/9 Preview Image with 3D Tilt & BorderTrail */}
           <div className="lg:col-span-8">
             <Tilt
               rotationFactor={5}
               className="w-full"
             >
-              <div className="relative group rounded-[32px] overflow-hidden bg-[#EEF0F5] aspect-[16/9] card-shadow border border-[#E8E9F0]">
+              <div className="relative group rounded-2xl sm:rounded-[32px] overflow-hidden bg-[#EEF0F5] aspect-[16/9] card-shadow border border-[#E8E9F0]">
                 <BorderTrail
                   size={120}
                   className="bg-gradient-to-r from-transparent via-[#8AAAFF] to-transparent opacity-60"
@@ -127,10 +124,10 @@ export const PromptDetailsPage: React.FC = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[#F7F8FC]">
-                    <span className="font-display text-4xl font-bold text-[#CBD0DF]">{prompt.title}</span>
+                    <span className="font-display text-2xl sm:text-4xl font-bold text-[#CBD0DF]">{prompt.title}</span>
                   </div>
                 )}
-                <div className="absolute top-6 right-6 px-4 py-2 bg-white/95 backdrop-blur-md rounded-xl text-[12px] font-black tracking-widest text-[#1A1A18] uppercase shadow-sm z-10">
+                <div className="absolute top-3 sm:top-6 right-3 sm:right-6 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/95 backdrop-blur-md rounded-xl text-[10px] sm:text-[12px] font-black tracking-widest text-[#1A1A18] uppercase shadow-sm z-10">
                   {prompt.typeLabel || prompt.category}
                 </div>
               </div>
@@ -145,22 +142,22 @@ export const PromptDetailsPage: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="mb-6"
             >
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
                 <div className="flex text-[#8AAAFF]">
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <StarHalf className="w-4 h-4 fill-current" />
+                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                  <StarHalf className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                 </div>
-                <span className="text-[14px] font-bold text-[#1A1A18]/60">
+                <span className="text-xs sm:text-[14px] font-bold text-[#1A1A18]/60">
                   {prompt.rating || 4.8}/5 ({prompt.reviewsCount || 247} reviews)
                 </span>
               </div>
-              <h1 className="font-display text-4xl lg:text-5xl font-extrabold tracking-tighter mb-4 text-[#1A1A18]">
+              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tighter mb-3 sm:mb-4 text-[#1A1A18]">
                 {prompt.title}
               </h1>
-              <div className="text-3xl font-black text-[#1A1A18] mb-8">
+              <div className="text-2xl sm:text-3xl font-black text-[#1A1A18] mb-6 sm:mb-8">
                 {typeof prompt.price === 'number' ? `$${prompt.price.toFixed(2)}` : prompt.price}
               </div>
             </motion.div>
@@ -170,10 +167,10 @@ export const PromptDetailsPage: React.FC = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className="flex items-center justify-between p-6 bg-[#F7F8FC] border border-[#E8E9F0] rounded-[24px]"
+              className="flex items-center justify-between p-4 sm:p-6 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl sm:rounded-[24px]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#E8E9F0] border border-[#1A1A18]/5 overflow-hidden">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#E8E9F0] border border-[#1A1A18]/5 overflow-hidden">
                   <img
                     src={prompt.creator.avatarUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator'}
                     alt={prompt.creator.name}
@@ -182,16 +179,16 @@ export const PromptDetailsPage: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-[16px] text-[#1A1A18]">@{prompt.creator.handle}</span>
-                    <BadgeCheck className="w-4 h-4 text-[#8AAAFF]" />
+                    <span className="font-bold text-sm sm:text-[16px] text-[#1A1A18]">@{prompt.creator.handle}</span>
+                    <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8AAAFF]" />
                   </div>
-                  <p className="text-xs font-bold text-[#1A1A18]/30 uppercase tracking-widest">
+                  <p className="text-[10px] sm:text-xs font-bold text-[#1A1A18]/30 uppercase tracking-widest">
                     {prompt.creator.followers || '1.2k Followers'}
                   </p>
                 </div>
               </div>
               <Magnetic intensity={0.15} range={50}>
-                <button className="px-6 py-2 bg-white border border-[#E8E9F0] text-xs font-bold rounded-xl hover:bg-[#F7F8FC] transition-colors uppercase tracking-widest text-[#1A1A18] shadow-sm">
+                <button className="px-4 sm:px-6 py-2 bg-white border border-[#E8E9F0] text-xs font-bold rounded-xl hover:bg-[#F7F8FC] transition-colors uppercase tracking-widest text-[#1A1A18] shadow-sm">
                   Follow
                 </button>
               </Magnetic>
@@ -201,10 +198,10 @@ export const PromptDetailsPage: React.FC = () => {
       </div>
 
       {/* Main Tabs & Sticky Purchase Sidebar */}
-      <div className="max-w-[1240px] mx-auto px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 mb-32">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-20 sm:mb-32">
         {/* Left: Tab Content */}
         <div className="lg:col-span-8">
-          <div className="border-b border-[#E8E9F0] pb-2 flex gap-2 mb-10">
+          <div className="border-b border-[#E8E9F0] pb-2 flex gap-2 mb-8 sm:mb-10 overflow-x-auto no-scrollbar">
             <AnimatedBackground
               defaultValue="Description"
               className="bg-[#1A1A18] rounded-xl"
@@ -222,7 +219,7 @@ export const PromptDetailsPage: React.FC = () => {
                   key={tab}
                   data-id={tab}
                   type="button"
-                  className={`px-5 py-2.5 text-[14px] font-bold uppercase tracking-widest rounded-xl transition-colors z-10 ${
+                  className={`px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-[14px] font-bold uppercase tracking-widest rounded-xl transition-colors z-10 whitespace-nowrap ${
                     activeTab === tab
                       ? 'text-white'
                       : 'text-[#1A1A18]/50 hover:text-[#1A1A18]'
@@ -234,81 +231,55 @@ export const PromptDetailsPage: React.FC = () => {
             </AnimatedBackground>
           </div>
 
-
           {activeTab === 'Description' && (
             <div>
-              <div className="text-[#1A1A18]/70 text-lg leading-relaxed mb-12">
-                <p className="mb-6">{prompt.description}</p>
-                <p className="mb-6">
-                  Create stunning, hyper-realistic cinematic portraits set in a futuristic Neo-Tokyo environment. This prompt is meticulously engineered to balance neon lighting, complex lens flares, and skin textures that look indistinguishable from real photography.
-                </p>
-
-                <h3 className="font-display text-2xl font-bold text-[#1A1A18] mb-6 tracking-tight">
-                  Key Features
-                </h3>
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 list-none p-0 mb-12">
-                  <li className="flex items-start gap-3">
-                    <div className="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center">
-                      <Zap className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block font-bold text-[#1A1A18]">Optimized for V6.1</span>
-                      <span className="text-sm text-[#1A1A18]/50">Leverages the latest Midjourney parameters.</span>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center">
-                      <Camera className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block font-bold text-[#1A1A18]">DSLR Quality</span>
-                      <span className="text-sm text-[#1A1A18]/50">Includes specific camera settings for depth.</span>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center">
-                      <Sun className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block font-bold text-[#1A1A18]">Neon Dynamics</span>
-                      <span className="text-sm text-[#1A1A18]/50">Expert handling of high-contrast lighting.</span>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center">
-                      <Layout className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="block font-bold text-[#1A1A18]">Infinite Variety</span>
-                      <span className="text-sm text-[#1A1A18]/50">Works with any subject, age, or gender.</span>
-                    </div>
-                  </li>
-                </ul>
+              <div className="text-[#1A1A18]/70 text-base sm:text-lg leading-relaxed mb-8 sm:mb-12">
+                <p className="mb-4 sm:mb-6">{prompt.description}</p>
+                {prompt.keyFeatures && prompt.keyFeatures.length > 0 && (
+                  <>
+                    <h3 className="font-display text-xl sm:text-2xl font-bold text-[#1A1A18] mb-4 sm:mb-6 tracking-tight">
+                      Key Features
+                    </h3>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 list-none p-0 mb-8 sm:mb-12">
+                      {prompt.keyFeatures.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <div className="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center">
+                            <Zap className="w-3.5 h-3.5" />
+                          </div>
+                          <div>
+                            <span className="block font-bold text-sm sm:text-base text-[#1A1A18]">{feat.title}</span>
+                            <span className="text-xs sm:text-sm text-[#1A1A18]/50">{feat.subtitle}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
 
               {/* Customer Reviews Section */}
-              <div className="pt-12 border-t border-[#E8E9F0]">
-                <div className="flex items-center justify-between mb-12">
-                  <h3 className="font-display text-3xl font-bold tracking-tight text-[#1A1A18]">
+              <div className="pt-8 sm:pt-12 border-t border-[#E8E9F0]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8 sm:mb-12">
+                  <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#1A1A18]">
                     Customer Reviews
                   </h3>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <div className="flex text-[#8AAAFF]">
-                      <Star className="w-4 h-4 fill-current" />
-                      <Star className="w-4 h-4 fill-current" />
-                      <Star className="w-4 h-4 fill-current" />
-                      <Star className="w-4 h-4 fill-current" />
-                      <StarHalf className="w-4 h-4 fill-current" />
+                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                      <StarHalf className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                     </div>
-                    <span className="font-bold text-[#1A1A18]">4.8 Average</span>
+                    <span className="font-bold text-xs sm:text-sm text-[#1A1A18]">4.8 Average</span>
                   </div>
                 </div>
 
-                <div className="space-y-8 mb-12">
-                  <div className="p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-[24px]">
-                    <div className="flex justify-between items-start mb-4">
+                <div className="space-y-4 sm:space-y-8 mb-8 sm:mb-12">
+                  <div className="p-5 sm:p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl sm:rounded-[24px]">
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#E8E9F0] overflow-hidden">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E8E9F0] overflow-hidden">
                           <img
                             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
                             alt="Alex Rivers"
@@ -316,27 +287,27 @@ export const PromptDetailsPage: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <p className="font-bold text-[#1A1A18]">Alex Rivers</p>
-                          <p className="text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest">
+                          <p className="font-bold text-sm sm:text-base text-[#1A1A18]">Alex Rivers</p>
+                          <p className="text-[10px] sm:text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest">
                             2 days ago
                           </p>
                         </div>
                       </div>
                       <div className="flex text-[#8AAAFF]">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-current" />
+                          <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                         ))}
                       </div>
                     </div>
-                    <p className="text-[#1A1A18]/70 leading-relaxed">
+                    <p className="text-xs sm:text-base text-[#1A1A18]/70 leading-relaxed">
                       Absolutely phenomenal prompt. The lighting is exactly what I was looking for. Highly recommend for any character design projects.
                     </p>
                   </div>
 
-                  <div className="p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-[24px]">
-                    <div className="flex justify-between items-start mb-4">
+                  <div className="p-5 sm:p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl sm:rounded-[24px]">
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#E8E9F0] overflow-hidden">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E8E9F0] overflow-hidden">
                           <img
                             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
                             alt="Sarah K."
@@ -344,25 +315,25 @@ export const PromptDetailsPage: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <p className="font-bold text-[#1A1A18]">Sarah K.</p>
-                          <p className="text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest">
+                          <p className="font-bold text-sm sm:text-base text-[#1A1A18]">Sarah K.</p>
+                          <p className="text-[10px] sm:text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest">
                             1 week ago
                           </p>
                         </div>
                       </div>
                       <div className="flex text-[#8AAAFF]">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-current" />
+                          <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                         ))}
                       </div>
                     </div>
-                    <p className="text-[#1A1A18]/70 leading-relaxed">
+                    <p className="text-xs sm:text-base text-[#1A1A18]/70 leading-relaxed">
                       The skin textures are incredible. A bit complex to tweak at first but once you get the hang of it, the results are elite.
                     </p>
                   </div>
                 </div>
 
-                <button className="text-[14px] font-bold text-[#8AAAFF] uppercase tracking-widest hover:underline">
+                <button className="text-xs sm:text-[14px] font-bold text-[#8AAAFF] uppercase tracking-widest hover:underline">
                   View all 247 reviews
                 </button>
               </div>
@@ -370,37 +341,37 @@ export const PromptDetailsPage: React.FC = () => {
           )}
 
           {activeTab === 'Use Cases' && (
-            <div className="space-y-6 text-[#1A1A18]/80 text-lg leading-relaxed">
-              <div className="p-6 bg-[#F7F8FC] rounded-2xl border border-[#E8E9F0]">
-                <h4 className="font-bold text-xl mb-2 text-[#1A1A18]">Character Design & Concept Art</h4>
-                <p>Ideal for video game hero models, anime cover art, and graphic novel prototyping.</p>
+            <div className="space-y-4 sm:space-y-6 text-[#1A1A18]/80 text-base sm:text-lg leading-relaxed">
+              <div className="p-5 sm:p-6 bg-[#F7F8FC] rounded-2xl border border-[#E8E9F0]">
+                <h4 className="font-bold text-lg sm:text-xl mb-2 text-[#1A1A18]">Character Design & Concept Art</h4>
+                <p className="text-sm sm:text-base">Ideal for video game hero models, anime cover art, and graphic novel prototyping.</p>
               </div>
-              <div className="p-6 bg-[#F7F8FC] rounded-2xl border border-[#E8E9F0]">
-                <h4 className="font-bold text-xl mb-2 text-[#1A1A18]">Album & Poster Artwork</h4>
-                <p>Generates high-contrast neon compositions ready for editorial vinyl covers and promotional posters.</p>
+              <div className="p-5 sm:p-6 bg-[#F7F8FC] rounded-2xl border border-[#E8E9F0]">
+                <h4 className="font-bold text-lg sm:text-xl mb-2 text-[#1A1A18]">Album & Poster Artwork</h4>
+                <p className="text-sm sm:text-base">Generates high-contrast neon compositions ready for editorial vinyl covers and promotional posters.</p>
               </div>
             </div>
           )}
 
           {activeTab === 'Examples' && (
             <div className="space-y-6">
-              <div className="p-6 bg-[#1A1A18] text-white rounded-2xl font-mono text-sm leading-relaxed overflow-x-auto">
+              <div className="p-4 sm:p-6 bg-[#1A1A18] text-white rounded-2xl font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto">
                 {prompt.promptTemplate || '/imagine prompt: cyberpunk portrait in Neo-Tokyo --v 6.1 --style raw'}
               </div>
             </div>
           )}
         </div>
 
-        {/* Right: Purchase Sidebar */}
+        {/* Right: Purchase Sidebar (Desktop & tablet) */}
         <div className="lg:col-span-4">
           <div className="sticky top-28">
-            <div className="bg-white border border-[#E8E9F0] rounded-[32px] p-8 card-shadow">
-              <div className="text-4xl font-black text-[#1A1A18] mb-8">
+            <div className="bg-white border border-[#E8E9F0] rounded-2xl sm:rounded-[32px] p-6 sm:p-8 card-shadow">
+              <div className="text-3xl sm:text-4xl font-black text-[#1A1A18] mb-6 sm:mb-8">
                 {typeof prompt.price === 'number' ? `$${prompt.price.toFixed(2)}` : prompt.price}
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-4 mb-10">
+              <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-10">
                 <Magnetic intensity={0.15} range={60}>
                   <button
                     onClick={() => {
@@ -413,7 +384,7 @@ export const PromptDetailsPage: React.FC = () => {
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="w-full h-[64px] bg-[#1A1A18] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-[#3A3A42] transition-colors shadow-sm active:scale-95"
+                    className="w-full h-14 sm:h-[64px] bg-[#1A1A18] text-white rounded-2xl font-bold text-base sm:text-lg flex items-center justify-center gap-3 hover:bg-[#3A3A42] transition-colors shadow-sm active:scale-95"
                   >
                     {copied ? (
                       <>
@@ -431,16 +402,16 @@ export const PromptDetailsPage: React.FC = () => {
                 <Magnetic intensity={0.1} range={50}>
                   <button
                     onClick={handleAddToCart}
-                    className="w-full h-[64px] bg-white border border-[#E8E9F0] text-[#1A1A18] rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-[#F7F8FC] transition-colors active:scale-95"
+                    className="w-full h-14 sm:h-[64px] bg-white border border-[#E8E9F0] text-[#1A1A18] rounded-2xl font-bold text-base sm:text-lg flex items-center justify-center gap-3 hover:bg-[#F7F8FC] transition-colors active:scale-95"
                   >
                     <ShoppingCart className="w-5 h-5" />
-                    {added ? 'Added to Cart!' : 'Add to Collection'}
+                    <span>{added ? 'Added to Cart!' : 'Add to Collection'}</span>
                   </button>
                 </Magnetic>
                 <button
                   type="button"
                   onClick={() => toggleFavorite(prompt)}
-                  className={`w-full h-[52px] rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border transition-all active:scale-95 ${
+                  className={`w-full h-12 sm:h-[52px] rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 border transition-all active:scale-95 ${
                     isFavorite(prompt.id)
                       ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-sm'
                       : 'bg-white border-[#E8E9F0] text-[#1A1A18] hover:bg-[#F7F8FC]'
@@ -452,20 +423,20 @@ export const PromptDetailsPage: React.FC = () => {
               </div>
 
               {/* Stats Table */}
-              <div className="space-y-4 pt-8 border-t border-[#E8E9F0]">
-                <div className="flex justify-between items-center text-[13px] font-bold">
+              <div className="space-y-3 sm:space-y-4 pt-6 sm:pt-8 border-t border-[#E8E9F0]">
+                <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
                   <span className="text-[#1A1A18]/40 uppercase tracking-widest">Downloads</span>
                   <span className="text-[#1A1A18]">{prompt.downloads || '3.4k'}</span>
                 </div>
-                <div className="flex justify-between items-center text-[13px] font-bold">
+                <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
                   <span className="text-[#1A1A18]/40 uppercase tracking-widest">Uses</span>
                   <span className="text-[#1A1A18]">{prompt.uses || '12k+'}</span>
                 </div>
-                <div className="flex justify-between items-center text-[13px] font-bold">
+                <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
                   <span className="text-[#1A1A18]/40 uppercase tracking-widest">Likes</span>
                   <span className="text-[#1A1A18]">{prompt.likes || 892}</span>
                 </div>
-                <div className="flex justify-between items-center text-[13px] font-bold">
+                <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
                   <span className="text-[#1A1A18]/40 uppercase tracking-widest">License</span>
                   <span className="flex items-center gap-1 text-[#1A1A18]">
                     Standard <Info className="w-3.5 h-3.5 text-[#8AAAFF]" />
@@ -474,8 +445,8 @@ export const PromptDetailsPage: React.FC = () => {
               </div>
 
               {/* Share Bar */}
-              <div className="mt-10 pt-8 border-t border-[#E8E9F0] flex items-center justify-between text-[#1A1A18]/40">
-                <span className="text-xs font-bold uppercase tracking-widest">Share Prompt</span>
+              <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-[#E8E9F0] flex items-center justify-between text-[#1A1A18]/40">
+                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest">Share Prompt</span>
                 <div className="flex gap-4">
                   <a href="#twitter" aria-label="Twitter" className="hover:text-[#1A1A18] transition-colors">
                     <Twitter className="w-4 h-4" />
@@ -493,22 +464,73 @@ export const PromptDetailsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Sticky Bottom Action Bar for Mobile Devices */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFEFB]/95 backdrop-blur-md border-t border-[#E8E9F0] p-3 px-4 flex items-center justify-between gap-3 shadow-2xl">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase font-bold text-[#1A1A18]/40 tracking-wider">Price</span>
+          <span className="font-display font-extrabold text-lg text-[#1A1A18]">
+            {typeof prompt.price === 'number' ? `$${prompt.price.toFixed(2)}` : prompt.price}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-1 justify-end">
+          <button
+            onClick={() => toggleFavorite(prompt)}
+            className="p-3 rounded-xl border border-[#E8E9F0] bg-white text-[#1A1A18] hover:bg-[#F7F8FC] active:scale-95 transition-all"
+            aria-label="Favorite prompt"
+          >
+            <Heart className={`w-4 h-4 ${isFavorite(prompt.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
+          </button>
+          <button
+            onClick={() => {
+              if (!isSignedIn) {
+                openSignIn();
+                return;
+              }
+              const text = prompt.promptTemplate || prompt.promptSnippet || prompt.description;
+              navigator.clipboard.writeText(text);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="flex-1 max-w-[140px] h-11 bg-[#1A1A18] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 text-[#8AAAFF]" />
+                <span>Copy</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleAddToCart}
+            className="flex-1 max-w-[140px] h-11 bg-[#8AAAFF] text-[#1A1A18] rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span>{added ? 'Added!' : 'Add to Cart'}</span>
+          </button>
+        </div>
+      </div>
+
       {/* Related Prompts Section */}
       {relatedPrompts.length > 0 && (
-        <section className="max-w-[1240px] mx-auto px-8 pt-16 border-t border-[#E8E9F0]">
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1A18]">
-              Explore More from This Creator
+        <section className="max-w-[1240px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16 border-t border-[#E8E9F0]">
+          <div className="flex items-center justify-between mb-8 sm:mb-12">
+            <h2 className="font-display text-xl sm:text-3xl font-bold tracking-tight text-[#1A1A18]">
+              More from This Creator
             </h2>
             <Link
               to="/browse"
-              className="text-[14px] font-bold text-[#8AAAFF] hover:text-[#1A1A18] transition-colors uppercase tracking-widest"
+              className="text-xs sm:text-[14px] font-bold text-[#8AAAFF] hover:text-[#1A1A18] transition-colors uppercase tracking-widest"
             >
               View all
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8">
             {relatedPrompts.map((related) => (
               <PromptCard key={related.id} prompt={related} />
             ))}

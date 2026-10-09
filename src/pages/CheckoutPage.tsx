@@ -36,42 +36,42 @@ export const CheckoutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FFFEFB]">
-      <main className="flex-1 max-w-[1240px] mx-auto w-full px-8 py-12 md:py-20">
+      <main className="flex-1 max-w-[1240px] mx-auto w-full px-4 sm:px-8 py-6 sm:py-12 md:py-20">
         {/* Step Indicator */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center justify-center mb-16"
+          className="flex items-center justify-center mb-8 sm:mb-16"
         >
-          <nav className="flex items-center gap-8 md:gap-16">
-            <div className="flex items-center gap-3">
+          <nav className="flex items-center gap-2.5 sm:gap-8 md:gap-16">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 to="/cart"
-                className="w-8 h-8 rounded-full border border-[#E8E9F0] flex items-center justify-center text-xs font-bold text-[#1A1A18]/40 hover:border-[#1A1A18] transition-all"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#E8E9F0] flex items-center justify-center text-xs font-bold text-[#1A1A18]/40 hover:border-[#1A1A18] transition-all"
               >
                 1
               </Link>
-              <span className="text-sm font-bold text-[#1A1A18]/40">Cart</span>
+              <span className="text-xs sm:text-sm font-bold text-[#1A1A18]/40">Cart</span>
             </div>
-            <div className="w-8 h-px bg-[#E8E9F0]" />
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-[#1A1A18] flex items-center justify-center text-xs font-bold text-white shadow-sm">
+            <div className="w-3 sm:w-8 h-px bg-[#E8E9F0]" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A1A18] flex items-center justify-center text-xs font-bold text-white shadow-sm">
                 2
               </span>
-              <span className="text-sm font-bold text-[#1A1A18]">Checkout</span>
+              <span className="text-xs sm:text-sm font-bold text-[#1A1A18]">Checkout</span>
             </div>
-            <div className="w-8 h-px bg-[#E8E9F0]" />
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full border border-[#E8E9F0] flex items-center justify-center text-xs font-bold text-[#1A1A18]/40">
+            <div className="w-3 sm:w-8 h-px bg-[#E8E9F0]" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#E8E9F0] flex items-center justify-center text-xs font-bold text-[#1A1A18]/40">
                 3
               </span>
-              <span className="text-sm font-bold text-[#1A1A18]/40">Confirmation</span>
+              <span className="text-xs sm:text-sm font-bold text-[#1A1A18]/40">Confirm</span>
             </div>
           </nav>
         </motion.div>
 
-        <form onSubmit={handleCompletePurchase} className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+        <form onSubmit={handleCompletePurchase} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
           {/* Left Form: Contact & Shipping & Payment */}
           <div className="lg:col-span-7 space-y-12">
             {/* Contact Information */}
@@ -245,7 +245,7 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Card Inputs */}
               {paymentMethod === 'card' && (
-                <div className="space-y-6 bg-[#F7F8FC] p-8 rounded-[24px] border border-[#E8E9F0]">
+                <div className="space-y-5 bg-[#F7F8FC] p-4 sm:p-8 rounded-2xl sm:rounded-[24px] border border-[#E8E9F0]">
                   <label className="block">
                     <span className="text-xs font-bold uppercase tracking-widest text-[#1A1A18]/40 mb-2 block">
                       Card Number
@@ -256,25 +256,25 @@ export const CheckoutPage: React.FC = () => {
                         value={cardNumber}
                         onChange={(e) => setCardNumber(e.target.value)}
                         placeholder="0000 0000 0000 0000"
-                        className="w-full h-14 px-5 bg-white border border-[#E8E9F0] rounded-xl focus:outline-none focus:border-[#8AAAFF] transition-all font-medium"
+                        className="w-full h-12 sm:h-14 px-4 sm:px-5 bg-white border border-[#E8E9F0] rounded-xl focus:outline-none focus:border-[#8AAAFF] transition-all font-medium text-sm"
                       />
-                      <span className="absolute right-5 font-black text-xs uppercase tracking-wider text-[#1A1A18]/40">
+                      <span className="absolute right-4 font-black text-xs uppercase tracking-wider text-[#1A1A18]/40">
                         VISA
                       </span>
                     </div>
                   </label>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-6">
                     <div>
                       <label className="block">
                         <span className="text-xs font-bold uppercase tracking-widest text-[#1A1A18]/40 mb-2 block">
-                          Expiry Date
+                          Expiry
                         </span>
                         <input
                           type="text"
                           value={expiry}
                           onChange={(e) => setExpiry(e.target.value)}
                           placeholder="MM/YY"
-                          className="w-full h-14 px-5 bg-white border border-[#E8E9F0] rounded-xl focus:outline-none focus:border-[#8AAAFF] transition-all font-medium"
+                          className="w-full h-12 sm:h-14 px-4 sm:px-5 bg-white border border-[#E8E9F0] rounded-xl focus:outline-none focus:border-[#8AAAFF] transition-all font-medium text-sm"
                         />
                       </label>
                     </div>
@@ -288,7 +288,7 @@ export const CheckoutPage: React.FC = () => {
                           value={cvv}
                           onChange={(e) => setCvv(e.target.value)}
                           placeholder="123"
-                          className="w-full h-14 px-5 bg-white border border-[#E8E9F0] rounded-xl focus:outline-none focus:border-[#8AAAFF] transition-all font-medium"
+                          className="w-full h-12 sm:h-14 px-4 sm:px-5 bg-white border border-[#E8E9F0] rounded-xl focus:outline-none focus:border-[#8AAAFF] transition-all font-medium text-sm"
                         />
                       </label>
                     </div>
@@ -300,8 +300,8 @@ export const CheckoutPage: React.FC = () => {
 
           {/* Right Column: Order Summary */}
           <div className="lg:col-span-5">
-            <div className="sticky top-28 bg-[#F7F8FC] border border-[#E8E9F0] rounded-[32px] p-8 card-shadow">
-              <h3 className="font-display text-2xl font-bold mb-8">Order Summary</h3>
+            <div className="sticky top-28 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl sm:rounded-[32px] p-5 sm:p-8 card-shadow">
+              <h3 className="font-display text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Order Summary</h3>
 
               {/* Items List */}
               <div className="space-y-6 mb-8">

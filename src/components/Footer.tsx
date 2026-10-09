@@ -14,12 +14,12 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="pt-20 pb-12 border-t border-[#E8E9F0] bg-[#FFFEFB]">
-      <div className="max-w-[1152px] mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
+    <footer className="pt-12 sm:pt-20 pb-8 sm:pb-12 border-t border-[#E8E9F0] bg-[#FFFEFB]">
+      <div className="max-w-[1152px] mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-12 sm:mb-20">
           {/* Brand Info */}
           <div className="lg:col-span-1">
-            <a href="#" className="flex items-center gap-2 text-xl mb-6">
+            <a href="#" className="flex items-center gap-2 text-xl mb-4 sm:mb-6">
               <span className="w-8 h-8 bg-[#1A1A18] rounded-lg flex items-center justify-center text-white">
                 <Zap className="w-4 h-4 fill-white" />
               </span>
