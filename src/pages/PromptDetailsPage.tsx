@@ -380,6 +380,10 @@ export const PromptDetailsPage: React.FC = () => {
                 <Magnetic intensity={0.15} range={60}>
                   <button
                     onClick={() => {
+                      if (!isSignedIn) {
+                        openSignIn();
+                        return;
+                      }
                       const text = prompt.promptTemplate || prompt.promptSnippet || prompt.description;
                       navigator.clipboard.writeText(text);
                       setCopied(true);
