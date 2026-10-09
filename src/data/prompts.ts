@@ -3,7 +3,6 @@ import { PromptItem, Category } from '../types';
 export const categories: Category[] = [
   { id: 'all', name: 'All', count: '16 Templates', iconName: 'Sparkles' },
   { id: 'popular', name: 'Popular', count: '8 Templates', iconName: 'Flame' },
-  { id: 'apps', name: 'Apps', count: '4 Apps', iconName: 'Smartphone' },
   { id: 'sections', name: 'Sections', count: '5 Sections', iconName: 'Layers' },
   { id: 'hero', name: 'Hero', count: '3 Heroes', iconName: 'LayoutTemplate' },
   { id: 'landing-page', name: 'Landing Page', count: '5 Pages', iconName: 'Monitor' },
@@ -38,7 +37,7 @@ export const promptItems: PromptItem[] = [
       isVerified: true,
     },
     price: 'Free',
-    category: 'Apps',
+    category: 'Ai',
     previewVideo: '/previews/Agent Grove.mp4',
     rating: 5.0,
     reviewsCount: 342,

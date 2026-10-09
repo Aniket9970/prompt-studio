@@ -55,3 +55,14 @@ export interface CartItem {
   prompt: PromptItem;
   quantity: number;
 }
+
+export interface OrderRecord {
+  id: string;
+  date: string;
+  items: CartItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  status: 'Completed' | 'Processing';
+  paymentMethod?: string;
+}

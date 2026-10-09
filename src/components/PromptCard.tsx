@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PromptItem } from '../types';
-import { Image as ImageIcon, FileText, Music, BarChart2, Copy, Check, Sparkles } from 'lucide-react';
+import { Image as ImageIcon, FileText, Music, BarChart2, Copy, Check, Sparkles, Heart } from 'lucide-react';
 import { Tilt } from './motion-primitives/tilt';
 import { BorderTrail } from './motion-primitives/border-trail';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth, useClerk } from '@clerk/react';
+import { useFavorites } from '../context/FavoritesContext';
 
 interface PromptCardProps {
   prompt: PromptItem;
@@ -47,6 +48,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
 
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(prompt.id);
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(prompt);
+  };
 
   // Play/pause video based on viewport visibility to free GPU during 144Hz scroll
   useEffect(() => {
@@ -94,6 +103,20 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
 
           {/* Visual / Video Area */}
           <div className="aspect-[16/10] bg-[#EEF0F5] relative overflow-hidden">
+            {/* Favourite Button */}
+            <button
+              type="button"
+              onClick={handleToggleFavorite}
+              title={favorited ? 'Remove from favourites' : 'Add to favourites'}
+              className="absolute top-3 left-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 flex items-center justify-center transition-all duration-200 active:scale-90 group/fav"
+            >
+              <Heart
+                className={`w-4 h-4 transition-transform duration-200 group-hover/fav:scale-110 ${
+                  favorited ? 'fill-rose-500 text-rose-500' : 'text-white'
+                }`}
+              />
+            </button>
+
             <Link to={`/prompt/${prompt.id}`} className="block w-full h-full relative group">
               {prompt.previewVideo && isInViewport ? (
                 <div className="w-full h-full relative overflow-hidden bg-black/5">
@@ -107,11 +130,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
                     preload="metadata"
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
-                  {/* Live Stream / Preview Glow indicator */}
-                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-1.5 text-[10px] font-bold text-white tracking-wider z-10 border border-white/10">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>PREVIEW</span>
-                  </div>
                 </div>
               ) : prompt.imageUrl && !imageError ? (
               <img

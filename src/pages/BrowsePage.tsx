@@ -160,7 +160,6 @@ export const BrowsePage: React.FC = () => {
                 </div>
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-2 no-scrollbar">
                   {[
-                    'Apps',
                     'Sections',
                     'Hero',
                     'Landing Page',

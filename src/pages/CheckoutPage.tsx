@@ -7,7 +7,7 @@ import { Magnetic } from '../components/motion-primitives/magnetic';
 import { AnimatedBackground } from '../components/motion-primitives/animated-background';
 
 export const CheckoutPage: React.FC = () => {
-  const { cart, removeFromCart, subtotal, discount, total, promoCode, applyPromo } = useCart();
+  const { cart, removeFromCart, subtotal, discount, total, promoCode, applyPromo, clearCart, addOrder } = useCart();
   const navigate = useNavigate();
 
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'apple'>('card');
@@ -27,6 +27,10 @@ export const CheckoutPage: React.FC = () => {
 
   const handleCompletePurchase = (e: React.FormEvent) => {
     e.preventDefault();
+    if (cart.length > 0) {
+      addOrder(cart, total, paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'paypal' ? 'PayPal' : 'Apple Pay');
+      clearCart();
+    }
     navigate('/confirmation');
   };
 

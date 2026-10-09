@@ -1,15 +1,36 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Zap, ShoppingBag } from 'lucide-react';
-import { SignInButton, SignUpButton, Show, UserButton } from '@clerk/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Zap, ShoppingBag, Heart, FolderHeart, LogOut, User, ChevronDown } from 'lucide-react';
+import { SignInButton, SignUpButton, Show, UserButton, useAuth, useClerk, useUser } from '@clerk/react';
 import { useCart } from '../context/CartContext';
+import { useFavorites } from '../context/FavoritesContext';
 import { Magnetic } from './motion-primitives/magnetic';
 import { AnimatedBackground } from './motion-primitives/animated-background';
+import { AnimatePresence, motion } from 'motion/react';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
-  const { cart } = useCart();
+  const navigate = useNavigate();
+  const { cart, orders } = useCart();
+  const { favorites } = useFavorites();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { signOut, openSignIn } = useClerk();
   const activePath = location.pathname;
+
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close account menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navLinks = [
     { label: 'Browse', path: '/browse' },
@@ -17,6 +38,14 @@ export const Navbar: React.FC = () => {
     { label: 'Pricing', path: '#pricing' },
     { label: 'About', path: '#about' },
   ];
+
+  const handleLogout = async () => {
+    setAccountMenuOpen(false);
+    if (isSignedIn) {
+      await signOut();
+    }
+    navigate('/');
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-[#FFFEFB]/90 backdrop-blur-md border-b border-[#E8E9F0] transition-colors transform-gpu">
@@ -61,7 +90,116 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4">
+          {/* Account Dropdown Menu */}
+          <div className="relative" ref={accountMenuRef}>
+            <button
+              type="button"
+              id="nav-account-button"
+              onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-bold transition-all ${
+                accountMenuOpen || activePath.startsWith('/account')
+                  ? 'bg-[#1A1A18] text-white border-[#1A1A18]'
+                  : 'bg-white border-[#E8E9F0] text-[#1A1A18] hover:border-[#8AAAFF] hover:bg-[#F7F8FC]'
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span>Account</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${accountMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Popover */}
+            <AnimatePresence>
+              {accountMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-[#E8E9F0] shadow-xl p-2 z-50 overflow-hidden"
+                >
+                  <div className="px-3 py-2.5 border-b border-[#F0F1F6] mb-1">
+                    <p className="text-xs font-bold text-[#1A1A18] truncate">
+                      {user?.fullName || (isSignedIn ? 'Creator Member' : 'Guest Account')}
+                    </p>
+                    <p className="text-[11px] text-[#6B6D75] truncate">
+                      {user?.primaryEmailAddress?.emailAddress || (isSignedIn ? 'Connected' : 'Local Workspace')}
+                    </p>
+                  </div>
+
+                  {/* Menu Options: Orders, Your Collection, Favourites, Logout */}
+                  <div className="space-y-0.5">
+                    <Link
+                      to="/account?tab=orders"
+                      onClick={() => setAccountMenuOpen(false)}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#1A1A18] hover:bg-[#F7F8FC] hover:text-[#8AAAFF] transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <ShoppingBag className="w-4 h-4 text-[#8B8E9A]" />
+                        <span>Orders</span>
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-[#F0F1F6] text-[#1A1A18]/70 rounded-full font-bold">
+                        {orders.length}
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/account?tab=collection"
+                      onClick={() => setAccountMenuOpen(false)}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#1A1A18] hover:bg-[#F7F8FC] hover:text-[#8AAAFF] transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <FolderHeart className="w-4 h-4 text-[#8B8E9A]" />
+                        <span>Your Collection</span>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/account?tab=favourites"
+                      onClick={() => setAccountMenuOpen(false)}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#1A1A18] hover:bg-[#F7F8FC] hover:text-rose-500 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Heart className="w-4 h-4 text-[#8B8E9A]" />
+                        <span>Favourites</span>
+                      </div>
+                      {favorites.length > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 bg-rose-50 text-rose-600 rounded-full font-bold">
+                          {favorites.length}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+
+                  <div className="border-t border-[#F0F1F6] mt-1 pt-1">
+                    {isSignedIn ? (
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          openSignIn();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-[#1A1A18] hover:bg-[#F7F8FC] transition-colors text-left"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Log in / Sign up</span>
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Cart Icon with Magnetic */}
           <Magnetic intensity={0.2} range={50}>
             <Link
@@ -103,14 +241,32 @@ export const Navbar: React.FC = () => {
           </Show>
 
           <Show when="signed-in">
-            <div className="flex items-center gap-3 pl-2">
+            <div className="flex items-center gap-3 pl-1">
               <UserButton
                 appearance={{
                   elements: {
                     userButtonAvatarBox: 'w-10 h-10 border border-[#E8E9F0]',
                   },
                 }}
-              />
+              >
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    label="Orders"
+                    labelIcon={<ShoppingBag className="w-4 h-4" />}
+                    onClick={() => navigate('/account?tab=orders')}
+                  />
+                  <UserButton.Action
+                    label="Your Collection"
+                    labelIcon={<FolderHeart className="w-4 h-4" />}
+                    onClick={() => navigate('/account?tab=collection')}
+                  />
+                  <UserButton.Action
+                    label="Favourites"
+                    labelIcon={<Heart className="w-4 h-4" />}
+                    onClick={() => navigate('/account?tab=favourites')}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
             </div>
           </Show>
         </div>
@@ -118,4 +274,3 @@ export const Navbar: React.FC = () => {
     </nav>
   );
 };
-

@@ -64,16 +64,9 @@ export const FeaturedPrompts: React.FC<FeaturedPromptsProps> = ({
         >
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8AAAFF]/10 text-[#8AAAFF] font-bold text-xs uppercase tracking-wider mb-3">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Live Interactive Previews</span>
-              </div>
-              <h2 className="clash-display text-4xl lg:text-5xl font-bold tracking-tight text-[#1A1A18]">
-                Website & App Previews
+              <h2 className="clash-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#1A1A18] uppercase">
+                PROMPTS LIVE INTERACTIVE PREVIEWS
               </h2>
-              <p className="text-[#6B6D75] text-base mt-2 max-w-xl">
-                Ready-to-generate website sections, full web apps, and 3D experiences. Copy any prompt instantly with one click.
-              </p>
             </div>
 
             {/* Filter Tabs using AnimatedBackground */}
