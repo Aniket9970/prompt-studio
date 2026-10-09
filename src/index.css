@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #FFFEFB;
+    --surface: #F7F8FC;
+    --text-primary: #1A1A18;
+    --text-secondary: #6B6D75;
+    --border: #E8E9F0;
+    --accent: #8AAAFF;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body {
+    font-family: 'Satoshi', sans-serif;
+    background-color: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+}
+
+.font-display {
+  font-family: 'Epilogue', sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.clash-display {
+  font-family: 'Epilogue', 'Clash Display', sans-serif;
+  letter-spacing: -0.04em;
+}
+
+.hero-gradient {
+  background: radial-gradient(circle at 30% 40%, rgba(138, 170, 255, 0.12) 0%, rgba(255, 254, 251, 0) 60%),
+              radial-gradient(circle at 80% 60%, rgba(184, 201, 255, 0.08) 0%, rgba(255, 254, 251, 0) 60%);
+}
+
+.dot-grid {
+  background-image: radial-gradient(var(--border) 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+}
+
+.card-shadow {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.04), 0px 1px 1px rgba(0, 0, 0, 0.01);
+}
+
+.transition-standard {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom Range Slider */
+.range-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  background: var(--text-primary);
+  border: 2px solid white;
+  border-radius: 50%;
+  margin-top: -8px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

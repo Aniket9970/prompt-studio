@@ -1,0 +1,936 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;700&display=swap');
+
+        :root {
+            --bg: #FFFEFB;
+            --surface: #F7F8FC;
+            --text-primary: #1A1A18;
+            --text-secondary: #6B6D75;
+            --border: #E8E9F0;
+            --accent: #8AAAFF;
+        }
+
+        body {
+            font-family: 'Satoshi', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .font-display {
+            font-family: 'Epilogue', sans-serif;
+            letter-spacing: -0.04em;
+            line-height: 0.95;
+        }
+
+        .card-shadow {
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.04), 0px 1px 1px rgba(0, 0, 0, 0.01);
+        }
+
+        .transition-standard {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-active {
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--text-primary);
+        }
+    </style>
+
+<meta name="preview-version" content="e442a287-303b-4719-9fd2-09768f7a1b22" />
+<meta name="preview-timestamp" content="2026-10-07T17:56:58.542Z" />
+
+<style>
+  html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
+    display: none !important; width: 0 !important; height: 0 !important;
+  }
+  html, body, * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+</style>
+<style>
+          body:not(.sd-ready) { opacity: 0 !important; }
+          body.sd-ready { opacity: 1 !important; transition: opacity 0.1s ease-in; }
+          sd-component { display: block; }
+        </style>
+
+<script type="module">
+  (function() {
+    document.addEventListener('wheel', function(e) {
+      if (e.ctrlKey) e.preventDefault();
+    }, { passive: false });
+  })();
+</script>
+<script type="module">
+    // SuperDesign Runtime
+    console.log('[SuperDesign] Preview loaded for versionId:', "e442a287-303b-4719-9fd2-09768f7a1b22");
+
+    window.__SUPERDESIGN_PREVIEW__ = {
+      versionId: "e442a287-303b-4719-9fd2-09768f7a1b22",
+      timestamp: "2026-10-07T17:56:58.542Z",
+      _modernScreenshotModule: null,
+
+      sendMessage: function(type, data) {
+        if (window.parent) {
+          window.parent.postMessage({
+            source: 'superdesign-preview',
+            type: type,
+            data: data,
+            versionId: this.versionId
+          }, '*');
+        }
+      },
+
+      ready: function() {
+        this.sendMessage('ready', { timestamp: Date.now() });
+      },
+
+      
+      _captureScreenshotInternal: async function() {
+        if (!this._modernScreenshotModule) {
+          console.log('[SuperDesign] Loading modern-screenshot library...');
+          this._modernScreenshotModule = await import('https://esm.sh/modern-screenshot@4.6.6');
+        }
+        var modernScreenshot = this._modernScreenshotModule;
+        if (!modernScreenshot || !modernScreenshot.domToCanvas) {
+          throw new Error('modern-screenshot library not loaded');
+        }
+
+        var scrollX = window.scrollX || window.pageXOffset;
+        var scrollY = window.scrollY || window.pageYOffset;
+        var viewportWidth = window.innerWidth;
+        var viewportHeight = window.innerHeight;
+        var documentWidth = Math.max(
+          document.documentElement.scrollWidth,
+          document.documentElement.offsetWidth,
+          document.documentElement.clientWidth,
+          document.body.scrollWidth,
+          document.body.offsetWidth
+        );
+        var documentHeight = Math.max(
+          document.documentElement.scrollHeight,
+          document.documentElement.offsetHeight,
+          document.documentElement.clientHeight,
+          document.body.scrollHeight,
+          document.body.offsetHeight
+        );
+
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        var pixelRatio = isMobile ? 1 : (window.devicePixelRatio || 1);
+
+        var dataUrl;
+
+        if (isMobile) {
+          var wrapper = document.createElement('div');
+          wrapper.style.cssText = 'position:fixed;top:0;left:0;width:' + viewportWidth + 'px;height:' + viewportHeight + 'px;overflow:hidden;z-index:999999;pointer-events:none;';
+          var clone = document.body.cloneNode(true);
+          clone.style.cssText = 'position:absolute;top:' + (-scrollY) + 'px;left:' + (-scrollX) + 'px;margin:0;width:' + documentWidth + 'px;';
+          wrapper.appendChild(clone);
+          document.body.appendChild(wrapper);
+          try {
+            var viewportCanvas = await modernScreenshot.domToCanvas(wrapper, {
+              scale: 1, backgroundColor: '#ffffff',
+              width: viewportWidth, height: viewportHeight,
+            });
+            dataUrl = viewportCanvas.toDataURL('image/png', 0.5);
+          } finally {
+            document.body.removeChild(wrapper);
+          }
+        } else {
+          var fullCanvas = await modernScreenshot.domToCanvas(document.documentElement, {
+            scale: pixelRatio, backgroundColor: '#ffffff',
+            width: documentWidth, height: documentHeight,
+          });
+          var viewportCanvas = document.createElement('canvas');
+          viewportCanvas.width = viewportWidth * pixelRatio;
+          viewportCanvas.height = viewportHeight * pixelRatio;
+          var ctx = viewportCanvas.getContext('2d');
+          if (!ctx) throw new Error('Failed to get canvas context');
+          ctx.drawImage(
+            fullCanvas,
+            scrollX * pixelRatio, scrollY * pixelRatio,
+            viewportWidth * pixelRatio, viewportHeight * pixelRatio,
+            0, 0, viewportWidth * pixelRatio, viewportHeight * pixelRatio
+          );
+          dataUrl = viewportCanvas.toDataURL('image/png', 1.0);
+        }
+
+        if (!dataUrl || !dataUrl.startsWith('data:image/png;base64,') || dataUrl.length < 100) {
+          throw new Error('Invalid screenshot data');
+        }
+
+        return {
+          dataUrl: dataUrl,
+          viewportWidth: viewportWidth,
+          viewportHeight: viewportHeight,
+          pixelRatio: pixelRatio
+        };
+      },
+
+      autoCapture: async function() {
+        if (window === window.parent) return;
+        try {
+          var result = await this._captureScreenshotInternal();
+          this.sendMessage('auto-screenshot', {
+            dataUrl: result.dataUrl,
+            timestamp: Date.now(),
+            viewportWidth: result.viewportWidth,
+            viewportHeight: result.viewportHeight,
+            pixelRatio: result.pixelRatio,
+          });
+        } catch (error) {
+          console.error('[SuperDesign] Auto-capture failed:', error);
+        }
+      },
+
+      captureScreenshot: async function(requestId, autoCaptureId) {
+        try {
+          this._currentRequestId = requestId;
+          this._currentAutoCaptureId = autoCaptureId;
+          var result = await this._captureScreenshotInternal();
+          this.sendMessage('screenshot-captured', {
+            dataUrl: result.dataUrl,
+            timestamp: Date.now(),
+            viewportWidth: result.viewportWidth,
+            viewportHeight: result.viewportHeight,
+            pixelRatio: result.pixelRatio,
+            requestId: this._currentRequestId,
+            autoCaptureId: this._currentAutoCaptureId
+          });
+          return result.dataUrl;
+        } catch (error) {
+          console.error('[SuperDesign] Screenshot capture failed:', error);
+          this.sendMessage('screenshot-error', {
+            error: error.message || String(error),
+            timestamp: Date.now(),
+            requestId: this._currentRequestId,
+            autoCaptureId: this._currentAutoCaptureId
+          });
+          throw error;
+        }
+      }
+  
+    };
+
+    
+    // Font loading helpers
+    window.__SUPERDESIGN_PREVIEW__.loadedFonts = new Set();
+    window.__SUPERDESIGN_PREVIEW__.loadGoogleFont = function(fontFamily) {
+      if (!fontFamily || this.loadedFonts.has(fontFamily)) return;
+      if (fontFamily.startsWith('Custom-')) return;
+
+      var systemFonts = ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI',
+        'Roboto', 'Helvetica', 'Arial', 'sans-serif', 'Georgia', 'Times New Roman',
+        'Times', 'serif', 'Menlo', 'Monaco', 'Consolas', 'Courier New', 'monospace'];
+      if (systemFonts.some(function(sf) { return fontFamily.toLowerCase().includes(sf.toLowerCase()); })) return;
+
+      if (!document.querySelector('link[href*="fonts.googleapis.com"]')) {
+        var preconnect1 = document.createElement('link');
+        preconnect1.rel = 'preconnect';
+        preconnect1.href = 'https://fonts.googleapis.com';
+        document.head.appendChild(preconnect1);
+        var preconnect2 = document.createElement('link');
+        preconnect2.rel = 'preconnect';
+        preconnect2.href = 'https://fonts.gstatic.com';
+        preconnect2.crossOrigin = 'anonymous';
+        document.head.appendChild(preconnect2);
+      }
+
+      var linkId = 'google-font-' + fontFamily.replace(/\\s+/g, '-').toLowerCase();
+      if (!document.getElementById(linkId)) {
+        var link = document.createElement('link');
+        link.id = linkId;
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fontFamily) + ':wght@400;500;600;700&display=swap';
+        link.onerror = function() { console.error('[SuperDesign] Failed to load Google Font:', fontFamily); };
+        document.head.appendChild(link);
+      }
+      this.loadedFonts.add(fontFamily);
+    };
+
+    window.__SUPERDESIGN_PREVIEW__.loadedCustomFonts = new Set();
+    window.__SUPERDESIGN_PREVIEW__.loadCustomFont = function(fontInfo) {
+      if (!fontInfo || !fontInfo.family || !fontInfo.url) return;
+      if (this.loadedCustomFonts.has(fontInfo.family)) return;
+      var styleId = 'custom-font-' + fontInfo.family.replace(/[^a-zA-Z0-9]/g, '-');
+      if (document.getElementById(styleId)) return;
+      var style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = '@font-face { ' +
+        'font-family: "' + fontInfo.family + '"; ' +
+        'src: url("' + fontInfo.url + '") format("' + (fontInfo.format || 'woff2') + '"); ' +
+        'font-weight: 100 900; font-style: normal; font-display: swap; }';
+      document.head.appendChild(style);
+      this.loadedCustomFonts.add(fontInfo.family);
+    };
+  
+    
+    // Theme sync
+    window.__SUPERDESIGN_PREVIEW__.applyTheme = function(payload, isDark) {
+      var root = document.documentElement;
+      var colorVars = isDark ? payload.dark : payload.light;
+      for (var name in colorVars) {
+        if (colorVars.hasOwnProperty(name)) {
+          root.style.setProperty(name, colorVars[name]);
+        }
+      }
+
+      if (payload.customFonts && Array.isArray(payload.customFonts)) {
+        payload.customFonts.forEach(function(fontInfo) {
+          window.__SUPERDESIGN_PREVIEW__.loadCustomFont(fontInfo);
+        });
+      }
+
+      if (payload.typography) {
+        var t = payload.typography;
+        if (t.fontSans && !t.fontSans.startsWith('Custom-')) window.__SUPERDESIGN_PREVIEW__.loadGoogleFont(t.fontSans);
+        if (t.fontSerif && !t.fontSerif.startsWith('Custom-')) window.__SUPERDESIGN_PREVIEW__.loadGoogleFont(t.fontSerif);
+        if (t.fontMono && !t.fontMono.startsWith('Custom-')) window.__SUPERDESIGN_PREVIEW__.loadGoogleFont(t.fontMono);
+
+        var formatFontValue = function(ff) {
+          if (!ff) return ff;
+          var first = ff.split(',')[0].trim().replace(/^["']|["']$/g, '');
+          return first.startsWith('var(') ? first : '"' + first + '"';
+        };
+        root.style.setProperty('--font-sans', formatFontValue(t.fontSans));
+        root.style.setProperty('--font-serif', formatFontValue(t.fontSerif));
+        root.style.setProperty('--font-mono', formatFontValue(t.fontMono));
+        root.style.setProperty('--font-size', t.fontSize);
+        root.style.setProperty('--line-height', t.lineHeight);
+        root.style.setProperty('--letter-spacing-body', t.letterSpacing);
+        root.style.setProperty('--letter-spacing-heading', t.headingLetterSpacing);
+        root.style.setProperty('--font-weight-regular', t.fontWeightRegular);
+        root.style.setProperty('--font-weight-bold', t.fontWeightBold);
+      }
+
+      if (payload.effects) {
+        root.style.setProperty('--radius', payload.effects.radius);
+        root.style.setProperty('--shadow', payload.effects.shadow);
+      }
+
+      if (isDark) { root.classList.add('dark'); } else { root.classList.remove('dark'); }
+    };
+  
+    
+    // Message listener
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'request-screenshot') {
+        if (window.__SUPERDESIGN_PREVIEW__) {
+          window.__SUPERDESIGN_PREVIEW__.captureScreenshot(event.data.requestId, event.data.autoCaptureId);
+        }
+      }
+
+      if (event.data && event.data.type === 'superdesign-theme-update') {
+        if (window.__SUPERDESIGN_PREVIEW__ && event.data.payload) {
+          var isDark = event.data.isDark || false;
+          window.__SUPERDESIGN_PREVIEW__.applyTheme(event.data.payload, isDark);
+          window.__SUPERDESIGN_PREVIEW__.sendMessage('theme-applied', { timestamp: Date.now(), isDark: isDark });
+        }
+      }
+
+      if (event.data && event.data.type === 'navigate-to-route') {
+        var route = event.data.route;
+        if (route) {
+          if (route === '/') {
+            if (window.location.hash) {
+              history.pushState(null, '', window.location.pathname + window.location.search);
+              window.dispatchEvent(new HashChangeEvent('hashchange'));
+            }
+          } else {
+            var newHash = '#' + route;
+            if (window.location.hash !== newHash) {
+              window.location.hash = route;
+            }
+          }
+        }
+      }
+    });
+  
+    
+    // Page lifecycle
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() { window.__SUPERDESIGN_PREVIEW__.ready(); });
+    } else {
+      window.__SUPERDESIGN_PREVIEW__.ready();
+    }
+
+    function onPageFullyLoaded() {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          setTimeout(function() {
+            window.__SUPERDESIGN_PREVIEW__.sendMessage('loaded', { timestamp: Date.now() });
+          }, 1500);
+          // Auto-capture disabled for this preview type
+        });
+      });
+    }
+
+    if (document.readyState === 'complete') {
+      onPageFullyLoaded();
+    } else {
+      window.addEventListener('load', onPageFullyLoaded);
+    }
+  
+  </script>
+<script type="module">
+  window.addEventListener('error', function(event) {
+    var msg = event.message || '';
+    var name = (event.error && event.error.name) || msg.split(':')[0] || '';
+    if (name === 'HierarchyRequestError' || msg.includes("Failed to execute 'appendChild' on 'Node'")) return;
+    if (window.__SUPERDESIGN_PREVIEW__) {
+      var err = event.error;
+      window.__SUPERDESIGN_PREVIEW__.sendMessage('error', {
+        message: event.message, filename: event.filename,
+        lineno: event.lineno, colno: event.colno,
+        name: (err && err.name) || name || 'Error',
+        stack: (err && err.stack) || null
+      });
+    }
+  });
+  window.addEventListener('unhandledrejection', function(event) {
+    var reason = event.reason;
+    var msg = (reason && reason.message) || (typeof reason === 'string' ? reason : '');
+    var name = (reason && reason.name) || 'UnhandledRejection';
+    if (name === 'HierarchyRequestError' || msg.includes("Failed to execute 'appendChild' on 'Node'")) return;
+    if (window.__SUPERDESIGN_PREVIEW__) {
+      window.__SUPERDESIGN_PREVIEW__.sendMessage('unhandled-rejection', {
+        reason: (reason && reason.message) || String(reason),
+        name: name,
+        stack: (reason && reason.stack) || null
+      });
+    }
+  });
+</script>
+<script type="module">import '/__visual-edit-bridge/iframe-runtime.mjs?v=81349612';</script>
+<script  src="https://cdn.jsdelivr.net/npm/petite-vue@0.4.1/dist/petite-vue.iife.js"></script>
+<script type="module">
+  (function() {
+    'use strict';
+
+    var MAX_RENDER_DEPTH = 5;
+
+    function showPage() {
+      document.body.classList.add('sd-ready');
+    }
+
+    var componentRegistry = new Map();
+    var instanceRegistry = new Map();
+    var API_BASE = "https://api.superdesign.dev";
+    var DRAFT_ID = "e442a287-303b-4719-9fd2-09768f7a1b22";
+
+    function buildDefaultProps(definition) {
+      var defaultProps = {};
+      var props = definition.props;
+      if (!props || !Array.isArray(props)) return defaultProps;
+      for (var i = 0; i < props.length; i++) {
+        var prop = props[i];
+        if (prop.defaultValue === undefined) continue;
+        var path = prop.name.split('.');
+        var current = defaultProps;
+        for (var j = 0; j < path.length - 1; j++) {
+          var key = path[j];
+          if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
+            current[key] = {};
+          }
+          current = current[key];
+        }
+        current[path[path.length - 1]] = prop.defaultValue;
+      }
+      return defaultProps;
+    }
+
+    function deepMerge(target, source) {
+      var result = Object.assign({}, target);
+      for (var key in source) {
+        if (!source.hasOwnProperty(key)) continue;
+        if (
+          source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
+          result[key] && typeof result[key] === 'object' && !Array.isArray(result[key])
+        ) {
+          result[key] = deepMerge(result[key], source[key]);
+        } else {
+          result[key] = source[key];
+        }
+      }
+      return result;
+    }
+
+    function registerComponent(id, definition) {
+      componentRegistry.set(id, definition);
+      console.log('[SDComponent] Registered component:', id);
+    }
+
+    function renderComponent(element, depth) {
+      depth = depth || 0;
+      var componentId = element.getAttribute('componentid') || element.getAttribute('ref');
+      var instanceId = element.getAttribute('instance');
+      var propsAttr = element.getAttribute('props');
+
+      if (!componentId) {
+        console.warn('[SDComponent] Missing componentId attribute on sd-component');
+        return;
+      }
+
+      if (depth >= MAX_RENDER_DEPTH) {
+        console.warn('[SDComponent] Max render depth reached for:', componentId);
+        element.setAttribute('data-error', 'max-depth');
+        return;
+      }
+
+      var definition = componentRegistry.get(componentId);
+      if (!definition) {
+        console.warn('[SDComponent] Component not found:', componentId);
+        element.setAttribute('data-pending', 'true');
+        return;
+      }
+
+      var instanceProps = {};
+      if (propsAttr) {
+        try { instanceProps = JSON.parse(propsAttr); }
+        catch (e) { console.warn('[SDComponent] Invalid props JSON:', propsAttr); }
+      }
+
+      var defaultProps = buildDefaultProps(definition);
+      var finalProps = deepMerge(defaultProps, instanceProps);
+
+      element.innerHTML = definition.htmlContent;
+
+      if (window.PetiteVue) {
+        finalProps.$emit = function(eventName, payload) {
+          if (payload && typeof payload === 'object' && payload.href) {
+            window.location.href = payload.href;
+            return;
+          }
+          var customEvent = new CustomEvent('sd-' + eventName, {
+            detail: payload, bubbles: true, composed: true,
+          });
+          element.dispatchEvent(customEvent);
+        };
+        window.PetiteVue.createApp(finalProps).mount(element);
+      } else {
+        console.warn('[SDComponent] Petite-Vue not loaded, template syntax will not be resolved');
+      }
+
+      instanceRegistry.set(instanceId, {
+        componentId: componentId,
+        element: element,
+        props: finalProps,
+        version: definition.version,
+      });
+
+      element.removeAttribute('data-pending');
+      element.setAttribute('data-rendered', 'true');
+      element.setAttribute('data-version', String(definition.version));
+      console.log('[SDComponent] Rendered:', componentId, instanceId);
+
+      // Render any nested sd-component children that were just injected
+      var nestedElements = element.querySelectorAll('sd-component[componentid], sd-component[ref]');
+      if (nestedElements.length > 0) {
+        var missingIds = [];
+        nestedElements.forEach(function(nested) {
+          var nestedId = nested.getAttribute('componentid') || nested.getAttribute('ref');
+          if (nestedId && !componentRegistry.has(nestedId)) {
+            missingIds.push(nestedId);
+          }
+        });
+
+        if (missingIds.length > 0) {
+          // Fetch missing nested components, then render
+          loadComponentsByIds(missingIds).then(function() {
+            nestedElements.forEach(function(nested) {
+              if (!nested.getAttribute('data-rendered')) {
+                renderComponent(nested, depth + 1);
+              }
+            });
+          });
+        } else {
+          // All nested definitions already loaded — render immediately
+          nestedElements.forEach(function(nested) {
+            if (!nested.getAttribute('data-rendered')) {
+              renderComponent(nested, depth + 1);
+            }
+          });
+        }
+      }
+    }
+
+    function updateComponentInstances(componentId) {
+      var elements = document.querySelectorAll('sd-component[componentid="' + componentId + '"], sd-component[ref="' + componentId + '"]');
+      elements.forEach(function(el) { renderComponent(el); });
+    }
+
+    function initializeComponents() {
+      var elements = document.querySelectorAll('sd-component[componentid], sd-component[ref]');
+      elements.forEach(function(el) {
+        if (!el.getAttribute('data-rendered')) { renderComponent(el); }
+      });
+    }
+
+    async function loadComponentsByIds(ids) {
+      if (!ids || ids.length === 0) return;
+      // Deduplicate and filter already-loaded
+      var uniqueIds = ids.filter(function(id, i, arr) {
+        return arr.indexOf(id) === i && !componentRegistry.has(id);
+      });
+      if (uniqueIds.length === 0) return;
+
+      try {
+        console.log('[SDComponent] Batch loading components:', uniqueIds);
+        var response = await fetch(API_BASE + '/v1/design-drafts/components/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ componentIds: uniqueIds }),
+        });
+        if (!response.ok) throw new Error('Batch load failed: ' + response.status);
+        var components = await response.json();
+        console.log('[SDComponent] Batch loaded', components.length, 'components');
+        components.forEach(function(comp) { registerComponent(comp.id, comp); });
+      } catch (error) {
+        console.error('[SDComponent] Failed to batch load components:', error);
+      }
+    }
+
+    async function loadComponentsForDraft() {
+      if (!DRAFT_ID) {
+        console.warn('[SDComponent] No draft ID configured');
+        showPage();
+        return;
+      }
+      try {
+        console.log('[SDComponent] Loading components for draft:', DRAFT_ID);
+        var response = await fetch(API_BASE + '/v1/design-drafts/' + DRAFT_ID + '/components', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) throw new Error('Failed to load components: ' + response.status);
+        var components = await response.json();
+        console.log('[SDComponent] Loaded', components.length, 'components');
+        components.forEach(function(comp) { registerComponent(comp.id, comp); });
+        initializeComponents();
+        showPage();
+      } catch (error) {
+        console.error('[SDComponent] Failed to load components:', error);
+        showPage();
+      }
+    }
+
+    function findReferencedComponents() {
+      var elements = document.querySelectorAll('sd-component[componentid], sd-component[ref]');
+      var ids = new Set();
+      elements.forEach(function(el) {
+        var ref = el.getAttribute('componentid') || el.getAttribute('ref');
+        if (ref) ids.add(ref);
+      });
+      return Array.from(ids);
+    }
+
+    window.__SD_COMPONENTS__ = {
+      register: registerComponent,
+      render: renderComponent,
+      update: updateComponentInstances,
+      loadForDraft: loadComponentsForDraft,
+      loadByIds: loadComponentsByIds,
+      init: initializeComponents,
+      findRefs: findReferencedComponents,
+      getRegistry: function() { return componentRegistry; },
+      getInstances: function() { return instanceRegistry; },
+      getDraftId: function() { return DRAFT_ID; },
+    };
+
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SD_COMPONENT_UPDATE') {
+        var cId = event.data.componentId;
+        var def = event.data.definition;
+        if (cId && def) { registerComponent(cId, def); updateComponentInstances(cId); }
+      }
+      if (event.data && event.data.type === 'SD_COMPONENTS_REGISTER') {
+        var comps = event.data.components;
+        if (Array.isArray(comps)) {
+          comps.forEach(function(c) { registerComponent(c.id, c); });
+          initializeComponents();
+        }
+      }
+    });
+
+    function bootComponents() {
+      // Pre-register components from __SD_COMPONENT_PRELOAD__ (injected by backend for standalone previews)
+      if (window.__SD_COMPONENT_PRELOAD__ && Array.isArray(window.__SD_COMPONENT_PRELOAD__)) {
+        console.log('[SDComponent] Pre-registering', window.__SD_COMPONENT_PRELOAD__.length, 'preloaded components');
+        window.__SD_COMPONENT_PRELOAD__.forEach(function(comp) {
+          registerComponent(comp.id, comp);
+        });
+      }
+
+      var refs = findReferencedComponents();
+      var unloaded = refs.filter(function(id) { return !componentRegistry.has(id); });
+
+      if (unloaded.length > 0) {
+        if (DRAFT_ID) {
+          loadComponentsForDraft();
+        } else {
+          // No draft ID — try batch loading the missing IDs directly
+          loadComponentsByIds(unloaded).then(function() {
+            initializeComponents();
+            showPage();
+          });
+        }
+      } else if (refs.length > 0) {
+        // All components already registered (e.g. from preload) — render immediately
+        initializeComponents();
+        showPage();
+      } else {
+        showPage();
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootComponents);
+    } else {
+      bootComponents();
+    }
+
+    var observer = new MutationObserver(function(mutations) {
+      var hasNew = false;
+      mutations.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1) {
+            if (node.tagName === 'SD-COMPONENT') { hasNew = true; }
+            else if (node.querySelector) {
+              if (node.querySelectorAll('sd-component[componentid], sd-component[ref]').length > 0) hasNew = true;
+            }
+          }
+        });
+      });
+      if (hasNew) {
+        var refs = findReferencedComponents();
+        var unloaded = refs.filter(function(id) { return !componentRegistry.has(id); });
+        if (unloaded.length > 0) {
+          loadComponentsByIds(unloaded).then(function() {
+            initializeComponents();
+          });
+        } else {
+          initializeComponents();
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    console.log('[SDComponent] Runtime initialized');
+  })();
+  </script>
+</head>
+<body class="selection:bg-[#8AAAFF]/30">
+    <div class="min-h-screen flex flex-col" data-sd-id="1">
+        <!-- Navigation -->
+        <sd-component componentid="1f93264b-286f-44ae-a611-6e53299e0aef" name="NavigationBar" props="{&quot;activeLink&quot;:&quot;browse&quot;,&quot;homeHref&quot;:&quot;https://draft-fa44729c-fc6c-4d90-b78e-7e440f81a4e0.preview.superdesign.dev&quot;,&quot;browseHref&quot;:&quot;https://draft-abf121d1-af85-41c6-b9d4-a3f851e710c4.preview.superdesign.dev&quot;}"></sd-component>
+
+        <!-- Hero Breadcrumb & Preview Section -->
+        <main class="flex-1" data-sd-id="2">
+            <div class="max-w-[1240px] mx-auto px-8 pt-8" data-sd-id="3">
+                <nav class="flex items-center gap-2 text-xs font-bold text-[#1A1A18]/30 uppercase tracking-widest mb-8" data-sd-id="4">
+                    <a href="https://draft-abf121d1-af85-41c6-b9d4-a3f851e710c4.preview.superdesign.dev" class="hover:text-[#1A1A18] transition-colors" data-sd-id="5">Marketplace</a>
+                    <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                    <a href="#categories" class="hover:text-[#1A1A18] transition-colors" data-sd-id="6">Photography</a>
+                    <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                    <span class="text-[#1A1A18]/60" data-sd-id="7">Neo-Tokyo Portraits</span>
+                </nav>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20" data-sd-id="8">
+                    <!-- Left: Preview -->
+                    <div class="lg:col-span-8" data-sd-id="9">
+                        <div class="relative group rounded-[32px] overflow-hidden bg-[#EEF0F5] aspect-[16/9] card-shadow" data-sd-id="10">
+                            <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/brand/f2ced3de-9a7c-4639-b005-74341e004701/assets/5e92753b-50cc-4fa6-b165-7550fd200001.png" alt="Cinematic Neo-Tokyo Portraits" class="w-full h-full object-cover" data-sd-id="11" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a1a1a/888?text=Image';">
+                            <div class="absolute top-6 right-6 px-4 py-2 bg-white/95 backdrop-blur-md rounded-xl text-[12px] font-black tracking-widest text-[#1A1A18] uppercase" data-sd-id="12">
+                                Midjourney V6.1
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Stats & Info -->
+                    <div class="lg:col-span-4 flex flex-col justify-center" data-sd-id="13">
+                        <div class="mb-6" data-sd-id="14">
+                            <div class="flex items-center gap-2 mb-4" data-sd-id="15">
+                                <div class="flex text-[#8AAAFF]" data-sd-id="16">
+                                    <iconify-icon icon="lucide:star" class="fill-current"></iconify-icon>
+                                    <iconify-icon icon="lucide:star" class="fill-current"></iconify-icon>
+                                    <iconify-icon icon="lucide:star" class="fill-current"></iconify-icon>
+                                    <iconify-icon icon="lucide:star" class="fill-current"></iconify-icon>
+                                    <iconify-icon icon="lucide:star-half" class="fill-current"></iconify-icon>
+                                </div>
+                                <span class="text-[14px] font-bold text-[#1A1A18]/60" data-sd-id="17">4.8/5 (247 reviews)</span>
+                            </div>
+                            <h1 class="font-display text-5xl font-extrabold tracking-tighter mb-4" data-sd-id="18">Cinematic Neo-Tokyo Portraits</h1>
+                            <div class="text-3xl font-black text-[#1A1A18] mb-8" data-sd-id="19">$12.00</div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-6 bg-[#F7F8FC] border border-[#E8E9F0] rounded-[24px]" data-sd-id="20">
+                            <div class="flex items-center gap-3" data-sd-id="21">
+                                <div class="w-12 h-12 rounded-full bg-[#E8E9F0] border border-[#1A1A18]/5 overflow-hidden" data-sd-id="22">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=studio_visuals" alt="Creator Avatar" class="w-full h-full" data-sd-id="23" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1a1a1a/888?text=Image';">
+                                </div>
+                                <div data-sd-id="24">
+                                    <div class="flex items-center gap-1.5" data-sd-id="25">
+                                        <span class="font-bold text-[16px]" data-sd-id="26">@studio_visuals</span>
+                                        <iconify-icon icon="lucide:badge-check" class="text-[#8AAAFF]"></iconify-icon>
+                                    </div>
+                                    <p class="text-xs font-bold text-[#1A1A18]/30 uppercase tracking-widest" data-sd-id="27">1.2k Followers</p>
+                                </div>
+                            </div>
+                            <button class="px-6 py-2 bg-white border border-[#E8E9F0] text-xs font-bold rounded-xl hover:bg-[#F7F8FC] transition-standard uppercase tracking-widest" data-sd-id="28">Follow</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details & Purchase Section -->
+            <div class="max-w-[1240px] mx-auto px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 mb-32" data-sd-id="29">
+                <!-- Left: Tabs Content -->
+                <div class="lg:col-span-8" data-sd-id="30">
+                    <div class="border-b border-[#E8E9F0] flex gap-10 mb-10" data-sd-id="31">
+                        <button class="pb-4 text-[14px] font-bold uppercase tracking-widest tab-active" data-sd-id="32">Description</button>
+                        <button class="pb-4 text-[14px] font-bold uppercase tracking-widest text-[#1A1A18]/30 hover:text-[#1A1A18] transition-colors" data-sd-id="33">Use Cases</button>
+                        <button class="pb-4 text-[14px] font-bold uppercase tracking-widest text-[#1A1A18]/30 hover:text-[#1A1A18] transition-colors" data-sd-id="34">Examples</button>
+                    </div>
+
+                    <div class="prose max-w-none text-[#1A1A18]/70 text-lg leading-relaxed mb-12" data-sd-id="35">
+                        <p class="mb-6" data-sd-id="36">Create stunning, hyper-realistic cinematic portraits set in a futuristic Neo-Tokyo environment. This prompt is meticulously engineered to balance neon lighting, complex lens flares, and skin textures that look indistinguishable from real photography.</p>
+                        <h3 class="font-display text-2xl font-bold text-[#1A1A18] mb-6 tracking-tight" data-sd-id="37">Key Features</h3>
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-6 list-none p-0 mb-12" data-sd-id="38">
+                            <li class="flex items-start gap-3" data-sd-id="39">
+                                <div class="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center" data-sd-id="40"><iconify-icon icon="lucide:zap" width="14"></iconify-icon></div>
+                                <div data-sd-id="41"><span class="block font-bold text-[#1A1A18]" data-sd-id="42">Optimized for V6.1</span><span class="text-sm" data-sd-id="43">Leverages the latest Midjourney parameters.</span></div>
+                            </li>
+                            <li class="flex items-start gap-3" data-sd-id="44">
+                                <div class="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center" data-sd-id="45"><iconify-icon icon="lucide:camera" width="14"></iconify-icon></div>
+                                <div data-sd-id="46"><span class="block font-bold text-[#1A1A18]" data-sd-id="47">DSLR Quality</span><span class="text-sm" data-sd-id="48">Includes specific camera settings for depth.</span></div>
+                            </li>
+                            <li class="flex items-start gap-3" data-sd-id="49">
+                                <div class="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center" data-sd-id="50"><iconify-icon icon="lucide:sun" width="14"></iconify-icon></div>
+                                <div data-sd-id="51"><span class="block font-bold text-[#1A1A18]" data-sd-id="52">Neon Dynamics</span><span class="text-sm" data-sd-id="53">Expert handling of high-contrast lighting.</span></div>
+                            </li>
+                            <li class="flex items-start gap-3" data-sd-id="54">
+                                <div class="mt-1 w-6 h-6 flex-shrink-0 bg-[#8AAAFF]/10 text-[#8AAAFF] rounded-lg flex items-center justify-center" data-sd-id="55"><iconify-icon icon="lucide:layout" width="14"></iconify-icon></div>
+                                <div data-sd-id="56"><span class="block font-bold text-[#1A1A18]" data-sd-id="57">Infinite Variety</span><span class="text-sm" data-sd-id="58">Works with any subject, age, or gender.</span></div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Reviews Section -->
+                    <div class="pt-12 border-t border-[#E8E9F0]" data-sd-id="59">
+                        <div class="flex items-center justify-between mb-12" data-sd-id="60">
+                            <h3 class="font-display text-3xl font-bold tracking-tight" data-sd-id="61">Customer Reviews</h3>
+                            <div class="flex items-center gap-3" data-sd-id="62">
+                                <div class="flex text-[#8AAAFF]" data-sd-id="63"><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star-half" class="fill-current"></iconify-icon></div>
+                                <span class="font-bold" data-sd-id="64">4.8 Average</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-8 mb-12" data-sd-id="65">
+                            <div class="p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-[24px]" data-sd-id="66">
+                                <div class="flex justify-between items-start mb-4" data-sd-id="67">
+                                    <div class="flex items-center gap-3" data-sd-id="68">
+                                        <div class="w-10 h-10 rounded-full bg-[#E8E9F0]" data-sd-id="69"></div>
+                                        <div data-sd-id="70"><p class="font-bold" data-sd-id="71">Alex Rivers</p><p class="text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest" data-sd-id="72">2 days ago</p></div>
+                                    </div>
+                                    <div class="flex text-[#8AAAFF]" data-sd-id="73"><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon></div>
+                                </div>
+                                <p class="text-[#1A1A18]/70 leading-relaxed" data-sd-id="74">Absolutely phenomenal prompt. The lighting is exactly what I was looking for. Highly recommend for any character design projects.</p>
+                            </div>
+                            <div class="p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-[24px]" data-sd-id="75">
+                                <div class="flex justify-between items-start mb-4" data-sd-id="76">
+                                    <div class="flex items-center gap-3" data-sd-id="77">
+                                        <div class="w-10 h-10 rounded-full bg-[#E8E9F0]" data-sd-id="78"></div>
+                                        <div data-sd-id="79"><p class="font-bold" data-sd-id="80">Sarah K.</p><p class="text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest" data-sd-id="81">1 week ago</p></div>
+                                    </div>
+                                    <div class="flex text-[#8AAAFF]" data-sd-id="82"><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star" class="fill-current"></iconify-icon><iconify-icon icon="lucide:star-half" class="fill-current"></iconify-icon></div>
+                                </div>
+                                <p class="text-[#1A1A18]/70 leading-relaxed" data-sd-id="83">The skin textures are incredible. A bit complex to tweak at first but once you get the hang of it, the results are elite.</p>
+                            </div>
+                        </div>
+                        <a href="#reviews" class="text-[14px] font-bold text-[#8AAAFF] uppercase tracking-widest hover:underline" data-sd-id="84">View all 247 reviews</a>
+                    </div>
+                </div>
+
+                <!-- Right: Purchase Sidebar -->
+                <div class="lg:col-span-4" data-sd-id="85">
+                    <div class="sticky top-28" data-sd-id="86">
+                        <div class="bg-white border border-[#E8E9F0] rounded-[32px] p-8 card-shadow" data-sd-id="87">
+                            <div class="text-4xl font-black text-[#1A1A18] mb-8" data-sd-id="88">$12.00</div>
+                            
+                            <div class="space-y-4 mb-10" data-sd-id="89">
+                                <a href="https://draft-04d42df9-03b9-4535-8cb3-c09c0cc23de7.preview.superdesign.dev" id="add-to-cart" class="w-full h-[64px] bg-[#1A1A18] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-[#3A3A42] transition-standard" data-sd-id="90">
+                                    <iconify-icon icon="lucide:shopping-cart" width="20"></iconify-icon>
+                                    Add to Cart
+                                </a>
+                                <button class="w-full h-[64px] bg-white border border-[#E8E9F0] text-[#1A1A18] rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-[#F7F8FC] transition-standard" data-sd-id="91">
+                                    <iconify-icon icon="lucide:bookmark" width="20"></iconify-icon>
+                                    Save to Collection
+                                </button>
+                            </div>
+
+                            <div class="space-y-4 pt-8 border-t border-[#E8E9F0]" data-sd-id="92">
+                                <div class="flex justify-between items-center text-[13px] font-bold" data-sd-id="93">
+                                    <span class="text-[#1A1A18]/40 uppercase tracking-widest" data-sd-id="94">Downloads</span>
+                                    <span data-sd-id="95">3.4k</span>
+                                </div>
+                                <div class="flex justify-between items-center text-[13px] font-bold" data-sd-id="96">
+                                    <span class="text-[#1A1A18]/40 uppercase tracking-widest" data-sd-id="97">Uses</span>
+                                    <span data-sd-id="98">12k+</span>
+                                </div>
+                                <div class="flex justify-between items-center text-[13px] font-bold" data-sd-id="99">
+                                    <span class="text-[#1A1A18]/40 uppercase tracking-widest" data-sd-id="100">Likes</span>
+                                    <span data-sd-id="101">892</span>
+                                </div>
+                                <div class="flex justify-between items-center text-[13px] font-bold" data-sd-id="102">
+                                    <span class="text-[#1A1A18]/40 uppercase tracking-widest" data-sd-id="103">License</span>
+                                    <span class="flex items-center gap-1" data-sd-id="104">Standard <iconify-icon icon="lucide:info" class="text-[#8AAAFF]"></iconify-icon></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-10 pt-8 border-t border-[#E8E9F0]" data-sd-id="105">
+                                <p class="text-[11px] font-black uppercase tracking-widest text-[#1A1A18]/30 mb-4" data-sd-id="106">Share with others</p>
+                                <div class="flex gap-4" data-sd-id="107">
+                                    <button class="w-10 h-10 rounded-full border border-[#E8E9F0] flex items-center justify-center text-[#1A1A18]/40 hover:text-[#8AAAFF] hover:border-[#8AAAFF] transition-standard" data-sd-id="108"><iconify-icon icon="ri:twitter-x-fill" width="18"></iconify-icon></button>
+                                    <button class="w-10 h-10 rounded-full border border-[#E8E9F0] flex items-center justify-center text-[#1A1A18]/40 hover:text-[#8AAAFF] hover:border-[#8AAAFF] transition-standard" data-sd-id="109"><iconify-icon icon="ri:linkedin-box-fill" width="18"></iconify-icon></button>
+                                    <button class="w-10 h-10 rounded-full border border-[#E8E9F0] flex items-center justify-center text-[#1A1A18]/40 hover:text-[#8AAAFF] hover:border-[#8AAAFF] transition-standard" data-sd-id="110"><iconify-icon icon="lucide:link" width="18"></iconify-icon></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Section -->
+            <section class="py-32 bg-[#F7F8FC] border-t border-[#E8E9F0]" data-sd-id="111">
+                <div class="max-w-[1240px] mx-auto px-8" data-sd-id="112">
+                    <div class="flex items-end justify-between mb-16" data-sd-id="113">
+                        <div class="max-w-xl" data-sd-id="114">
+                            <h2 class="font-display text-4xl font-extrabold tracking-tighter mb-4" data-sd-id="115">More from @studio_visuals</h2>
+                            <p class="text-lg text-[#1A1A18]/50 font-medium" data-sd-id="116">Discover other high-performance visual assets by this creator.</p>
+                        </div>
+                        <a href="#all-by-creator" class="text-[14px] font-bold text-[#1A1A18] hover:text-[#8AAAFF] transition-standard flex items-center gap-2 uppercase tracking-widest" data-sd-id="117">
+                            View Profile <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" data-sd-id="118">
+                        <sd-component componentid="7600abd7-ad92-4ccb-a9cf-f8ccde1958ba" name="PromptCard" instance="rel-1" props="{&quot;title&quot;:&quot;Cyberpunk Street Life&quot;,&quot;typeLabel&quot;:&quot;MIDJOURNEY&quot;,&quot;price&quot;:&quot;$8.00&quot;,&quot;creatorHandle&quot;:&quot;studio_visuals&quot;}"></sd-component>
+                        <sd-component componentid="7600abd7-ad92-4ccb-a9cf-f8ccde1958ba" name="PromptCard" instance="rel-2" props="{&quot;title&quot;:&quot;Synthwave Landscapes&quot;,&quot;typeLabel&quot;:&quot;MIDJOURNEY&quot;,&quot;price&quot;:&quot;$15.00&quot;,&quot;creatorHandle&quot;:&quot;studio_visuals&quot;}"></sd-component>
+                        <sd-component componentid="7600abd7-ad92-4ccb-a9cf-f8ccde1958ba" name="PromptCard" instance="rel-3" props="{&quot;title&quot;:&quot;Retro-Futuristic Mechs&quot;,&quot;typeLabel&quot;:&quot;DALL-E 3&quot;,&quot;price&quot;:&quot;$10.00&quot;,&quot;creatorHandle&quot;:&quot;studio_visuals&quot;}"></sd-component>
+                        <sd-component componentid="7600abd7-ad92-4ccb-a9cf-f8ccde1958ba" name="PromptCard" instance="rel-4" props="{&quot;title&quot;:&quot;Neon Tokyo Architecture&quot;,&quot;typeLabel&quot;:&quot;MIDJOURNEY&quot;,&quot;price&quot;:&quot;$12.00&quot;,&quot;creatorHandle&quot;:&quot;studio_visuals&quot;}"></sd-component>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <sd-component componentid="ac124601-3590-43ed-8c75-970bab5e77f4" name="Footer"></sd-component>
+    </div>
+</body></html>
