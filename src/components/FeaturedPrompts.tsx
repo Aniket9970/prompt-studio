@@ -5,7 +5,7 @@ import { AnimatedBackground } from './motion-primitives/animated-background';
 import { InView } from './motion-primitives/in-view';
 import { AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 interface FeaturedPromptsProps {
   prompts: PromptItem[];

@@ -55,28 +55,28 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Marketplace Column */}
+          {/* Marketplace & Account Column */}
           <div>
-            <h4 className="font-bold mb-6 text-[#1A1A18] text-sm tracking-wide">Marketplace</h4>
+            <h4 className="font-bold mb-6 text-[#1A1A18] text-sm tracking-wide">Account & Library</h4>
             <ul className="space-y-4 text-sm">
               <li>
-                <a href="#featured" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
-                  Browse All
+                <a href="/browse" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
+                  Browse All Prompts
                 </a>
               </li>
               <li>
-                <a href="#top-sellers" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
-                  Top Sellers
+                <a href="/account?tab=orders" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
+                  Order History
                 </a>
               </li>
               <li>
-                <a href="#new" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
-                  New Releases
+                <a href="/account?tab=collection" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
+                  Your Collection
                 </a>
               </li>
               <li>
-                <a href="#creator" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
-                  Become a Creator
+                <a href="/account?tab=favourites" className="text-[#8B8E9A] hover:text-[#1A1A18] transition-colors">
+                  Favourites
                 </a>
               </li>
             </ul>

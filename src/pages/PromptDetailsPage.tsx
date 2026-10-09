@@ -15,10 +15,12 @@ import {
   Linkedin,
   Copy,
   Check,
+  Heart,
 } from 'lucide-react';
 import { promptItems } from '../data/prompts';
 import { PromptCard } from '../components/PromptCard';
 import { useCart } from '../context/CartContext';
+import { useFavorites } from '../context/FavoritesContext';
 import { motion } from 'motion/react';
 import { Tilt } from '../components/motion-primitives/tilt';
 import { BorderTrail } from '../components/motion-primitives/border-trail';
@@ -30,6 +32,7 @@ export const PromptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const [activeTab, setActiveTab] = useState<'Description' | 'Use Cases' | 'Examples'>('Description');
@@ -413,6 +416,18 @@ export const PromptDetailsPage: React.FC = () => {
                     {added ? 'Added to Cart!' : 'Add to Collection'}
                   </button>
                 </Magnetic>
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite(prompt)}
+                  className={`w-full h-[52px] rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border transition-all active:scale-95 ${
+                    isFavorite(prompt.id)
+                      ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-sm'
+                      : 'bg-white border-[#E8E9F0] text-[#1A1A18] hover:bg-[#F7F8FC]'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${isFavorite(prompt.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
+                  <span>{isFavorite(prompt.id) ? 'Favourited' : 'Add to Favourites'}</span>
+                </button>
               </div>
 
               {/* Stats Table */}

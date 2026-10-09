@@ -11,18 +11,14 @@ import {
   ChevronRight,
   ExternalLink,
   Download,
-  Calendar,
   Sparkles,
-  ArrowRight,
   ShieldCheck,
-  Zap,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { useAuth, useUser, useClerk } from '@clerk/react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { PromptCard } from '../components/PromptCard';
-import { Magnetic } from '../components/motion-primitives/magnetic';
 
 type TabType = 'orders' | 'collection' | 'favourites' | 'profile';
 
@@ -33,7 +29,7 @@ export const AccountPage: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { orders } = useCart();
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites } = useFavorites();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const { signOut, openSignIn } = useClerk();
