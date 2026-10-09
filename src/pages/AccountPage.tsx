@@ -371,7 +371,7 @@ export const AccountPage: React.FC = () => {
                                   {item.prompt.category}
                                 </span>
                                 <span className="text-[9px] sm:text-[10px] font-bold text-[#8B8E9A] truncate">
-                                  by @{item.prompt.creator.handle}
+                                  by @{item.prompt.creator.handle.replace(/^@+/, '')}
                                 </span>
                               </div>
                               <h4 className="font-display font-bold text-sm sm:text-base text-[#1A1A18] hover:text-[#8AAAFF] transition-colors truncate">

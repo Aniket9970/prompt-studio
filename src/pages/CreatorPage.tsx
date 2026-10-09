@@ -21,9 +21,10 @@ import {
   Upload,
   Film,
   X,
-  Database
+  Database,
+  BadgeCheck,
 } from 'lucide-react';
-import { usePrompts, DEFAULT_STUDIO_CREATOR } from '../context/PromptsContext';
+import { usePrompts } from '../context/PromptsContext';
 import { uploadMediaToSupabase } from '../lib/supabase';
 import { categories } from '../data/prompts';
 import { PromptCard } from '../components/PromptCard';
@@ -60,6 +61,8 @@ export const CreatorPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'code-export'>('upload');
 
   // Form State
+  const [creatorName, setCreatorName] = useState<string>(() => localStorage.getItem('ps_creator_name') || 'PROMPT STUDIO');
+  const [creatorHandle, setCreatorHandle] = useState<string>(() => localStorage.getItem('ps_creator_handle') || 'promptstudio');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(categories[0]?.id || 'ai');
@@ -187,6 +190,16 @@ export const CreatorPage: React.FC = () => {
         { title: feat3Title, subtitle: feat3Sub, icon: 'Zap' },
       ];
 
+      const safeCreatorName = creatorName.trim() || 'PROMPT STUDIO';
+      const safeCreatorHandle = creatorHandle.trim().replace(/^@+/, '') || 'promptstudio';
+      const customCreator = {
+        name: safeCreatorName,
+        handle: safeCreatorHandle,
+        avatarUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${safeCreatorHandle}&backgroundColor=1a1a18`,
+        followers: 'Official Studio',
+        isVerified: true,
+      };
+
       // 3. Save prompt record to Supabase database
       const newPrompt = await addPrompt({
         title: title.trim(),
@@ -200,6 +213,7 @@ export const CreatorPage: React.FC = () => {
         promptTemplate: promptTemplate.trim(),
         isPopular,
         keyFeatures,
+        creator: customCreator,
       });
 
       setSuccessMessage(`Prompt "${newPrompt.title}" & video successfully saved to Supabase backend!`);
@@ -230,7 +244,13 @@ export const CreatorPage: React.FC = () => {
     description: description || 'Enter your prompt summary to see how it renders in real-time across the marketplace.',
     model: model || 'AI APP',
     typeLabel: typeLabel || 'Interactive App',
-    creator: DEFAULT_STUDIO_CREATOR,
+    creator: {
+      name: creatorName.trim() || 'PROMPT STUDIO',
+      handle: creatorHandle.trim().replace(/^@+/, '') || 'promptstudio',
+      avatarUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${creatorHandle.trim().replace(/^@+/, '') || 'promptstudio'}&backgroundColor=1a1a18`,
+      followers: 'Official Studio',
+      isVerified: true,
+    },
     price: isFree ? 'Free' : (parseFloat(price) || 19),
     category: category,
     previewVideo: previewVideo || undefined,
@@ -554,6 +574,58 @@ export const CreatorPage: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Creator Attribution & Handle Settings */}
+                <div className="p-4 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#1A1A18] flex items-center gap-1.5">
+                      <BadgeCheck className="w-4 h-4 text-[#8AAAFF]" />
+                      Creator Branding & Handle
+                    </label>
+                    <span className="text-[11px] font-black text-[#8AAAFF] bg-[#8AAAFF]/10 px-2.5 py-0.5 rounded-full">
+                      @{creatorHandle.replace(/^@+/, '') || 'promptstudio'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="block text-[11px] font-bold text-[#6B6D75] mb-1">
+                        Creator Display Name
+                      </span>
+                      <input
+                        type="text"
+                        value={creatorName}
+                        onChange={(e) => {
+                          setCreatorName(e.target.value);
+                          localStorage.setItem('ps_creator_name', e.target.value);
+                        }}
+                        placeholder="e.g. PROMPT STUDIO"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-bold outline-none transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <span className="block text-[11px] font-bold text-[#6B6D75] mb-1">
+                        Creator Handle
+                      </span>
+                      <div className="relative flex items-center">
+                        <span className="absolute left-3.5 text-xs font-bold text-[#8B8E9A]">@</span>
+                        <input
+                          type="text"
+                          value={creatorHandle.replace(/^@+/, '')}
+                          onChange={(e) => {
+                            const clean = e.target.value.replace(/^@+/, '');
+                            setCreatorHandle(clean);
+                            localStorage.setItem('ps_creator_handle', clean);
+                          }}
+                          placeholder="promptstudio"
+                          className="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-white border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-bold outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#6B6D75] mt-2">
+                    Tip: Any changes here immediately apply to your live card preview and will be saved on your next prompt.
+                  </p>
+                </div>
+
                 {/* Title */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#1A1A18] mb-2">
@@ -1078,9 +1150,12 @@ export const CreatorPage: React.FC = () => {
                           )}
                         </td>
                         <td className="py-4 px-4">
-                          <span className="font-bold text-[#1A1A18] flex items-center gap-1">
+                          <span className="font-bold text-[#1A1A18] flex items-center gap-1 text-xs">
                             <ShieldCheck className="w-3.5 h-3.5 text-[#8AAAFF]" />
                             {p.creator.name}
+                          </span>
+                          <span className="text-[10px] text-[#6B6D75] font-semibold block">
+                            @{p.creator.handle.replace(/^@+/, '')}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-right">

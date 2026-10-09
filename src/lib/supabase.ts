@@ -70,7 +70,7 @@ export function mapRowToPrompt(row: any): PromptItem {
     typeLabel: row.type_label || 'Interactive App',
     creator: {
       name: row.creator_name || 'PROMPT STUDIO',
-      handle: row.creator_handle || '@promptstudio',
+      handle: (row.creator_handle || 'promptstudio').replace(/^@+/, ''),
       avatarUrl:
         row.creator_avatar_url ||
         'https://api.dicebear.com/7.x/identicon/svg?seed=promptstudio&backgroundColor=1a1a18',
@@ -137,9 +137,10 @@ export function mapPromptToRow(
       prompt.promptSnippet ||
       prompt.promptTemplate.slice(0, 140) + '...',
     type_label: prompt.typeLabel || 'Interactive App',
-    creator_name: 'PROMPT STUDIO',
-    creator_handle: '@promptstudio',
+    creator_name: prompt.creator?.name || 'PROMPT STUDIO',
+    creator_handle: (prompt.creator?.handle || 'promptstudio').replace(/^@+/, ''),
     creator_avatar_url:
+      prompt.creator?.avatarUrl ||
       'https://api.dicebear.com/7.x/identicon/svg?seed=promptstudio&backgroundColor=1a1a18',
     is_popular: prompt.isPopular ?? true,
     is_recent: true,

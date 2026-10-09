@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
-  Star,
-  StarHalf,
+  Sparkles,
   BadgeCheck,
   Zap,
   ShoppingCart,
@@ -142,16 +141,14 @@ export const PromptDetailsPage: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="mb-6"
             >
-              <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <div className="flex text-[#8AAAFF]">
-                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                  <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                  <StarHalf className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                </div>
-                <span className="text-xs sm:text-[14px] font-bold text-[#1A1A18]/60">
-                  {prompt.rating || 4.8}/5 ({prompt.reviewsCount || 247} reviews)
+              <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#8AAAFF]/10 text-[#8AAAFF] border border-[#8AAAFF]/20">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Official Studio Release
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  <Check className="w-3 h-3" />
+                  Verified Prompt
                 </span>
               </div>
               <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tighter mb-3 sm:mb-4 text-[#1A1A18]">
@@ -179,11 +176,11 @@ export const PromptDetailsPage: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-sm sm:text-[16px] text-[#1A1A18]">@{prompt.creator.handle}</span>
+                    <span className="font-bold text-sm sm:text-[16px] text-[#1A1A18]">@{prompt.creator.handle.replace(/^@+/, '')}</span>
                     <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8AAAFF]" />
                   </div>
                   <p className="text-[10px] sm:text-xs font-bold text-[#1A1A18]/30 uppercase tracking-widest">
-                    {prompt.creator.followers || '1.2k Followers'}
+                    {prompt.creator.followers || 'Official Studio'}
                   </p>
                 </div>
               </div>
@@ -255,87 +252,6 @@ export const PromptDetailsPage: React.FC = () => {
                     </ul>
                   </>
                 )}
-              </div>
-
-              {/* Customer Reviews Section */}
-              <div className="pt-8 sm:pt-12 border-t border-[#E8E9F0]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8 sm:mb-12">
-                  <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#1A1A18]">
-                    Customer Reviews
-                  </h3>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="flex text-[#8AAAFF]">
-                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                      <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                      <StarHalf className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                    </div>
-                    <span className="font-bold text-xs sm:text-sm text-[#1A1A18]">4.8 Average</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4 sm:space-y-8 mb-8 sm:mb-12">
-                  <div className="p-5 sm:p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl sm:rounded-[24px]">
-                    <div className="flex justify-between items-start mb-3 sm:mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E8E9F0] overflow-hidden">
-                          <img
-                            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
-                            alt="Alex Rivers"
-                            className="w-full h-full"
-                          />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm sm:text-base text-[#1A1A18]">Alex Rivers</p>
-                          <p className="text-[10px] sm:text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest">
-                            2 days ago
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex text-[#8AAAFF]">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs sm:text-base text-[#1A1A18]/70 leading-relaxed">
-                      Absolutely phenomenal prompt. The lighting is exactly what I was looking for. Highly recommend for any character design projects.
-                    </p>
-                  </div>
-
-                  <div className="p-5 sm:p-8 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl sm:rounded-[24px]">
-                    <div className="flex justify-between items-start mb-3 sm:mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E8E9F0] overflow-hidden">
-                          <img
-                            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
-                            alt="Sarah K."
-                            className="w-full h-full"
-                          />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm sm:text-base text-[#1A1A18]">Sarah K.</p>
-                          <p className="text-[10px] sm:text-xs text-[#1A1A18]/30 font-bold uppercase tracking-widest">
-                            1 week ago
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex text-[#8AAAFF]">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs sm:text-base text-[#1A1A18]/70 leading-relaxed">
-                      The skin textures are incredible. A bit complex to tweak at first but once you get the hang of it, the results are elite.
-                    </p>
-                  </div>
-                </div>
-
-                <button className="text-xs sm:text-[14px] font-bold text-[#8AAAFF] uppercase tracking-widest hover:underline">
-                  View all 247 reviews
-                </button>
               </div>
             </div>
           )}
@@ -425,21 +341,23 @@ export const PromptDetailsPage: React.FC = () => {
               {/* Stats Table */}
               <div className="space-y-3 sm:space-y-4 pt-6 sm:pt-8 border-t border-[#E8E9F0]">
                 <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
-                  <span className="text-[#1A1A18]/40 uppercase tracking-widest">Downloads</span>
-                  <span className="text-[#1A1A18]">{prompt.downloads || '3.4k'}</span>
+                  <span className="text-[#1A1A18]/40 uppercase tracking-widest">Format</span>
+                  <span className="text-[#1A1A18]">{prompt.typeLabel || 'Web App'}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
-                  <span className="text-[#1A1A18]/40 uppercase tracking-widest">Uses</span>
-                  <span className="text-[#1A1A18]">{prompt.uses || '12k+'}</span>
+                  <span className="text-[#1A1A18]/40 uppercase tracking-widest">Category</span>
+                  <span className="text-[#1A1A18]">{prompt.category}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
-                  <span className="text-[#1A1A18]/40 uppercase tracking-widest">Likes</span>
-                  <span className="text-[#1A1A18]">{prompt.likes || 892}</span>
+                  <span className="text-[#1A1A18]/40 uppercase tracking-widest">Status</span>
+                  <span className="text-emerald-600 font-bold flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> Official Studio Release
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-xs sm:text-[13px] font-bold">
                   <span className="text-[#1A1A18]/40 uppercase tracking-widest">License</span>
                   <span className="flex items-center gap-1 text-[#1A1A18]">
-                    Standard <Info className="w-3.5 h-3.5 text-[#8AAAFF]" />
+                    Commercial Ready <Info className="w-3.5 h-3.5 text-[#8AAAFF]" />
                   </span>
                 </div>
               </div>

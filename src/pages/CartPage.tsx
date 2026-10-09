@@ -102,7 +102,9 @@ export const CartPage: React.FC = () => {
                         <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-[#1A1A18]/40 uppercase tracking-widest mb-3 sm:mb-4">
                           <span>{item.prompt.typeLabel || item.prompt.model}</span>
                           <span className="w-1 h-1 rounded-full bg-[#E8E9F0]" />
-                          <span className="truncate">@{item.prompt.creatorHandle || item.prompt.creator.handle}</span>
+                          <span className="truncate">
+                            @{(item.prompt.creatorHandle || item.prompt.creator.handle).replace(/^@+/, '')}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center border border-[#E8E9F0] rounded-xl overflow-hidden bg-[#F7F8FC]">

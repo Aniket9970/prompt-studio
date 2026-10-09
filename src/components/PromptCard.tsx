@@ -227,7 +227,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
                   {prompt.creator.name.charAt(0)}
                 </div>
               )}
-              <span className="text-xs font-semibold text-[#1A1A18]/70">@{prompt.creator.handle}</span>
+              <span className="text-xs font-semibold text-[#1A1A18]/70">
+                @{prompt.creator.handle.replace(/^@+/, '')}
+              </span>
             </div>
 
             <div className="flex items-center gap-2">

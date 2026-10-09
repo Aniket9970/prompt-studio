@@ -10,7 +10,7 @@ import {
 
 export const DEFAULT_STUDIO_CREATOR: Creator = {
   name: 'PROMPT STUDIO',
-  handle: '@promptstudio',
+  handle: 'promptstudio',
   avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=promptstudio&backgroundColor=1a1a18',
   followers: 'Official Studio',
   isVerified: true,
