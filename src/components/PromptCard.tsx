@@ -28,16 +28,23 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const FallbackIcon = prompt.fallbackIcon ? fallbackIcons[prompt.fallbackIcon] || ImageIcon : ImageIcon;
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { trackPromptCopy, fetchPromptVideo } = usePrompts();
+  const favorited = isFavorite(prompt.id);
 
-  // Use IntersectionObserver to only load and decode videos when card is near the viewport
+  // Lazy-load video and track viewport visibility to keep CPU/GPU blazing fast
   useEffect(() => {
-    if (!prompt.previewVideo) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         setIsInViewport(entry.isIntersecting);
+        if (entry.isIntersecting && !prompt.previewVideo) {
+          fetchPromptVideo(prompt.id);
+        }
       },
-      { rootMargin: '200px 0px 200px 0px' }
+      { rootMargin: '100px 0px 100px 0px' }
     );
 
     if (cardRef.current) {
@@ -45,13 +52,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
     }
 
     return () => observer.disconnect();
-  }, [prompt.previewVideo]);
-
-  const { isSignedIn } = useAuth();
-  const { openSignIn } = useClerk();
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const { trackPromptCopy } = usePrompts();
-  const favorited = isFavorite(prompt.id);
+  }, [prompt.id, prompt.previewVideo, fetchPromptVideo]);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -92,7 +93,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
         isRevese={false}
         className="h-full flex"
       >
-        <div className="group relative w-full bg-white border border-[#E8E9F0] rounded-[22px] sm:rounded-[28px] overflow-hidden card-shadow flex flex-col hover:-translate-y-1 transition-transform duration-200">
+        <div
+          onMouseEnter={() => {
+            if (!prompt.previewVideo) {
+              fetchPromptVideo(prompt.id);
+            }
+          }}
+          className="group relative w-full bg-white border border-[#E8E9F0] rounded-[22px] sm:rounded-[28px] overflow-hidden card-shadow flex flex-col hover:-translate-y-1 transition-transform duration-200"
+        >
           {/* Subtle animated border trail on popular prompts when hovered */}
           {prompt.isPopular && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -142,8 +150,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
             ) : (
-              <div className="w-full h-full bg-[#F7F8FC] flex items-center justify-center">
-                <FallbackIcon className="w-12 h-12 text-[#CBD0DF]" />
+              <div className="w-full h-full bg-gradient-to-br from-[#1A1A18]/[0.03] via-[#EEF0F5] to-[#E5E7EB] flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="w-11 h-11 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/60 shadow-sm flex items-center justify-center text-[#1A1A18]/60 transition-transform duration-300 group-hover:scale-110">
+                  <FallbackIcon className="w-5 h-5 text-[#1A1A18]/70" />
+                </div>
+                <span className="mt-2 text-[10px] font-bold uppercase tracking-wider text-[#1A1A18]/40">
+                  {prompt.model || 'Interactive Prompt'}
+                </span>
               </div>
             )}
           </Link>

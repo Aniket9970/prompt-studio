@@ -82,9 +82,16 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [prompts]);
 
+  // Dedup set for video requests to avoid duplicate network fetches
+  const videoFetchInProgress = React.useRef<Set<string>>(new Set());
+
   // Fetch a single prompt video on-demand (used when viewing prompt details or card)
   const fetchPromptVideo = useCallback(async (id: string): Promise<string | null> => {
-    if (!isSupabaseConfigured) return null;
+    if (!isSupabaseConfigured || !id) return null;
+    if (videoFetchInProgress.current.has(id)) return null;
+
+    videoFetchInProgress.current.add(id);
+
     try {
       const { data, error } = await supabase
         .from('prompts')
@@ -100,6 +107,7 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     } catch (e) {
       console.warn('Single prompt video load error:', e);
+      videoFetchInProgress.current.delete(id);
     }
     return null;
   }, []);
@@ -112,7 +120,7 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     try {
-      // Step 1: Rapidly fetch all prompts metadata (excluding massive preview_video base64 payloads to prevent DB statement timeouts)
+      // Step 1: Rapidly fetch all prompts metadata (<1 second response time)
       const { data, error } = await supabase
         .from('prompts')
         .select(PROMPT_METADATA_COLUMNS)
@@ -159,16 +167,14 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
         setIsLoading(false);
 
-        // Step 2: Progressively fetch preview_video in micro-batches (size 3) in the background so cards get video previews without timeouts
-        const validIds = validRows.map((r: any) => String(r.id));
-        const BATCH_SIZE = 3;
-        for (let i = 0; i < validIds.length; i += BATCH_SIZE) {
-          const batchIds = validIds.slice(i, i + BATCH_SIZE);
+        // Step 2: Pre-fetch video only for the top 3 cards in the hero section for instant playback without network congestion
+        const topIds = validRows.slice(0, 3).map((r: any) => String(r.id));
+        if (topIds.length > 0) {
           try {
             const { data: videoData, error: videoError } = await supabase
               .from('prompts')
               .select('id, preview_video')
-              .in('id', batchIds);
+              .in('id', topIds);
 
             if (!videoError && videoData && videoData.length > 0) {
               setPrompts((currentPrompts) =>
@@ -181,8 +187,8 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 })
               );
             }
-          } catch (batchErr) {
-            console.warn('Batch video loading notice:', batchErr);
+          } catch (e) {
+            console.warn('Initial top video load error:', e);
           }
         }
       }
