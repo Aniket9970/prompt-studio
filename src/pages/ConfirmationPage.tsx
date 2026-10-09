@@ -8,9 +8,12 @@ import { motion } from 'motion/react';
 import { Magnetic } from '../components/motion-primitives/magnetic';
 import { BorderTrail } from '../components/motion-primitives/border-trail';
 import { TextShimmer } from '../components/motion-primitives/text-shimmer';
+import { useAuth, useClerk } from '@clerk/react';
 
 export const ConfirmationPage: React.FC = () => {
   const { lastOrderItems, orderId } = useCart();
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Fallback to primary prompt if order was empty
@@ -22,6 +25,10 @@ export const ConfirmationPage: React.FC = () => {
   }, 0);
 
   const handleCopyPrompt = (id: string, text: string) => {
+    if (!isSignedIn) {
+      openSignIn();
+      return;
+    }
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
