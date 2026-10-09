@@ -869,7 +869,7 @@ export const CreatorPage: React.FC = () => {
                     <div>
                       <input
                         type="text"
-                        placeholder="e.g. /previews/Agent Grove.mp4 or https://cdn.example.com/demo.mp4"
+                        placeholder="e.g. https://your-cdn.com/demo.mp4"
                         value={previewVideo}
                         onChange={(e) => {
                           setPreviewVideo(e.target.value);
