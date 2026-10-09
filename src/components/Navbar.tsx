@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Zap, ShoppingBag, Heart, FolderHeart, LogOut, User, ChevronDown } from 'lucide-react';
+import { Zap, ShoppingBag, Heart, FolderHeart, LogOut, User, ChevronDown, Lock } from 'lucide-react';
 import { SignInButton, SignUpButton, Show, UserButton, useAuth, useClerk, useUser } from '@clerk/react';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -169,6 +169,27 @@ export const Navbar: React.FC = () => {
                         </span>
                       )}
                     </Link>
+
+                    {/* Creator Studio - Exclusively for aniketkhatkhede123@gmail.com */}
+                    {isSignedIn &&
+                      (user?.primaryEmailAddress?.emailAddress?.toLowerCase().trim() === 'aniketkhatkhede123@gmail.com' ||
+                        user?.emailAddresses?.some(
+                          (e) => e.emailAddress.toLowerCase().trim() === 'aniketkhatkhede123@gmail.com'
+                        )) && (
+                        <Link
+                          to="/creator"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#1A1A18] hover:bg-[#F7F8FC] hover:text-[#8AAAFF] transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Lock className="w-4 h-4 text-emerald-600" />
+                            <span>Creator Studio</span>
+                          </div>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded font-mono font-bold">
+                            ADMIN
+                          </span>
+                        </Link>
+                      )}
                   </div>
 
                   <div className="border-t border-[#F0F1F6] mt-1 pt-1">

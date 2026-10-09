@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PromptItem } from '../types';
-import { promptItems } from '../data/prompts';
 
 interface FavoritesContextType {
   favorites: PromptItem[];
@@ -22,8 +21,8 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {
       // ignore
     }
-    // Default initial favorites so Favourites tab displays items right away
-    return [promptItems[0], promptItems[4]];
+    // Default to empty array
+    return [];
   });
 
   useEffect(() => {

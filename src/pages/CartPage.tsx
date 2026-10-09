@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowRight, Zap, ShieldCheck, LifeBuoy, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { usePrompts } from '../context/PromptsContext';
 import { PromptCard } from '../components/PromptCard';
-import { promptItems } from '../data/prompts';
 import { motion, AnimatePresence } from 'motion/react';
 import { Magnetic } from '../components/motion-primitives/magnetic';
 
-
 export const CartPage: React.FC = () => {
   const { cart, removeFromCart, subtotal, discount, total, promoCode, applyPromo, promoError } = useCart();
+  const { prompts } = usePrompts();
   const [inputPromo, setInputPromo] = useState('');
   const [promoSuccess, setPromoSuccess] = useState(false);
 
@@ -21,7 +21,7 @@ export const CartPage: React.FC = () => {
   };
 
   // Recommended prompts for bottom section
-  const recommendedPrompts = promptItems.slice(3, 7);
+  const recommendedPrompts = prompts.slice(0, 4);
 
   return (
     <main className="min-h-screen pt-12 pb-32 relative overflow-hidden bg-[#FFFEFB]">
@@ -246,16 +246,18 @@ export const CartPage: React.FC = () => {
       </div>
 
       {/* Recommended Section */}
-      <section className="py-24 border-t border-[#E8E9F0] mt-24">
-        <div className="max-w-[1240px] mx-auto px-8">
-          <h2 className="font-display text-3xl font-bold tracking-tight mb-12">Recommended for You</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {recommendedPrompts.map((prompt) => (
-              <PromptCard key={prompt.id} prompt={prompt} />
-            ))}
+      {recommendedPrompts.length > 0 && (
+        <section className="py-24 border-t border-[#E8E9F0] mt-24">
+          <div className="max-w-[1240px] mx-auto px-8">
+            <h2 className="font-display text-3xl font-bold tracking-tight mb-12">Recommended for You</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {recommendedPrompts.map((prompt) => (
+                <PromptCard key={prompt.id} prompt={prompt} />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   );
 };

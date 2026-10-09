@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, FileText, Printer, Download, ExternalLink, ChevronRight, Copy, CheckCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { PromptCard } from '../components/PromptCard';
-import { promptItems } from '../data/prompts';
+import { usePrompts } from '../context/PromptsContext';
 import { motion } from 'motion/react';
 import { Magnetic } from '../components/motion-primitives/magnetic';
 import { BorderTrail } from '../components/motion-primitives/border-trail';
@@ -12,12 +12,13 @@ import { useAuth, useClerk } from '@clerk/react';
 
 export const ConfirmationPage: React.FC = () => {
   const { lastOrderItems, orderId } = useCart();
+  const { prompts } = usePrompts();
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Fallback to primary prompt if order was empty
-  const items = lastOrderItems.length > 0 ? lastOrderItems : [{ prompt: promptItems[0], quantity: 1 }];
+  // Safe items list from actual order
+  const items = lastOrderItems.filter((item) => Boolean(item && item.prompt));
 
   const subtotal = items.reduce((acc, item) => {
     const price = typeof item.prompt.price === 'number' ? item.prompt.price : 0;
@@ -47,7 +48,7 @@ export const ConfirmationPage: React.FC = () => {
   };
 
   // Recommended for you
-  const recommendedItems = promptItems.slice(1, 4);
+  const recommendedItems = prompts.slice(0, 3);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FFFEFB]">
@@ -259,24 +260,26 @@ export const ConfirmationPage: React.FC = () => {
         </section>
 
         {/* Recommended Prompts */}
-        <section className="py-24 bg-[#F7F8FC] border-y border-[#E8E9F0]">
-          <div className="max-w-[1240px] mx-auto px-8">
-            <div className="flex items-center justify-between mb-16">
-              <h2 className="font-display text-4xl font-extrabold tracking-tighter">Recommended for You</h2>
-              <Link
-                to="/browse"
-                className="h-12 px-6 bg-white border border-[#E8E9F0] text-[#1A1A18] rounded-xl font-bold text-sm flex items-center hover:bg-[#F7F8FC] transition-all"
-              >
-                Continue Shopping
-              </Link>
+        {recommendedItems.length > 0 && (
+          <section className="py-24 bg-[#F7F8FC] border-y border-[#E8E9F0]">
+            <div className="max-w-[1240px] mx-auto px-8">
+              <div className="flex items-center justify-between mb-16">
+                <h2 className="font-display text-4xl font-extrabold tracking-tighter">Recommended for You</h2>
+                <Link
+                  to="/browse"
+                  className="h-12 px-6 bg-white border border-[#E8E9F0] text-[#1A1A18] rounded-xl font-bold text-sm flex items-center hover:bg-[#F7F8FC] transition-all"
+                >
+                  Continue Shopping
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recommendedItems.map((prompt) => (
+                  <PromptCard key={prompt.id} prompt={prompt} />
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {recommendedItems.map((prompt) => (
-                <PromptCard key={prompt.id} prompt={prompt} />
-              ))}
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
     </div>
   );

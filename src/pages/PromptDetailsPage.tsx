@@ -17,7 +17,7 @@ import {
   Check,
   Heart,
 } from 'lucide-react';
-import { promptItems } from '../data/prompts';
+import { usePrompts } from '../context/PromptsContext';
 import { PromptCard } from '../components/PromptCard';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -31,6 +31,7 @@ import { useAuth, useClerk } from '@clerk/react';
 export const PromptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { prompts, getPromptById } = usePrompts();
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isSignedIn } = useAuth();
@@ -39,9 +40,29 @@ export const PromptDetailsPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [added, setAdded] = useState(false);
 
-  // Find prompt or fallback to item 1
-  const prompt = promptItems.find((p) => p.id === id) || promptItems[0];
-  const relatedPrompts = promptItems.filter((p) => p.id !== prompt.id).slice(0, 4);
+  // Find prompt by ID or fallback to first prompt
+  const prompt = (id ? getPromptById(id) : undefined) || prompts[0];
+  const relatedPrompts = prompt ? prompts.filter((p) => p.id !== prompt.id).slice(0, 4) : [];
+
+  if (!prompt) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 py-20 text-center bg-[#FFFEFB]">
+        <div className="w-16 h-16 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[#1A1A18]">
+          <Zap className="w-7 h-7 text-[#8AAAFF]" />
+        </div>
+        <h2 className="font-display text-3xl font-extrabold text-[#1A1A18] mb-2">Prompt Not Found</h2>
+        <p className="text-sm text-[#8B8E9A] max-w-md mx-auto mb-8">
+          This prompt does not exist or has been removed from the studio catalog.
+        </p>
+        <Link
+          to="/browse"
+          className="px-6 py-3.5 bg-[#1A1A18] text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-[#333333] transition-colors shadow-sm"
+        >
+          Explore Marketplace
+        </Link>
+      </div>
+    );
+  }
 
   const handleAddToCart = () => {
     addToCart(prompt);
@@ -473,25 +494,27 @@ export const PromptDetailsPage: React.FC = () => {
       </div>
 
       {/* Related Prompts Section */}
-      <section className="max-w-[1240px] mx-auto px-8 pt-16 border-t border-[#E8E9F0]">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1A18]">
-            Explore More from This Creator
-          </h2>
-          <Link
-            to="/browse"
-            className="text-[14px] font-bold text-[#8AAAFF] hover:text-[#1A1A18] transition-colors uppercase tracking-widest"
-          >
-            View all
-          </Link>
-        </div>
+      {relatedPrompts.length > 0 && (
+        <section className="max-w-[1240px] mx-auto px-8 pt-16 border-t border-[#E8E9F0]">
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1A18]">
+              Explore More from This Creator
+            </h2>
+            <Link
+              to="/browse"
+              className="text-[14px] font-bold text-[#8AAAFF] hover:text-[#1A1A18] transition-colors uppercase tracking-widest"
+            >
+              View all
+            </Link>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {relatedPrompts.map((related) => (
-            <PromptCard key={related.id} prompt={related} />
-          ))}
-        </div>
-      </section>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {relatedPrompts.map((related) => (
+              <PromptCard key={related.id} prompt={related} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

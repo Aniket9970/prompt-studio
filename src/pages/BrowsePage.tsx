@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Search, SlidersHorizontal, Star, LayoutGrid, List, ArrowLeft, ArrowRight } from 'lucide-react';
-import { promptItems } from '../data/prompts';
+import { usePrompts } from '../context/PromptsContext';
 import { PromptCard } from '../components/PromptCard';
 import { motion, AnimatePresence } from 'motion/react';
 import { TextLoop } from '../components/motion-primitives/text-loop';
 import { TextEffect } from '../components/motion-primitives/text-effect';
 
-
 export const BrowsePage: React.FC = () => {
+  const { prompts } = usePrompts();
   const [search, setSearch] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -40,7 +40,7 @@ export const BrowsePage: React.FC = () => {
   };
 
   const filteredPrompts = useMemo(() => {
-    return promptItems.filter((prompt) => {
+    return prompts.filter((prompt) => {
       // Search
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -278,7 +278,7 @@ export const BrowsePage: React.FC = () => {
             {/* Top Sorting & View Controls */}
             <div className="flex flex-wrap items-center justify-between gap-6 mb-12">
               <div className="text-[14px] font-bold text-[#1A1A18]/40">
-                Showing {filteredPrompts.length > 0 ? `1-${filteredPrompts.length}` : '0'} of {promptItems.length} web & app templates
+                Showing {filteredPrompts.length > 0 ? `1-${filteredPrompts.length}` : '0'} of {prompts.length} web & app templates
               </div>
 
               <div className="flex items-center gap-6">

@@ -3,11 +3,12 @@ import { Hero } from '../components/Hero';
 import { CategoryCarousel } from '../components/CategoryCarousel';
 import { FeaturedPrompts } from '../components/FeaturedPrompts';
 import { CtaBanner } from '../components/CtaBanner';
-import { promptItems } from '../data/prompts';
+import { usePrompts } from '../context/PromptsContext';
 
 export const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { prompts } = usePrompts();
 
   return (
     <div>
@@ -17,7 +18,7 @@ export const HomePage: React.FC = () => {
         onSelectCategory={setSelectedCategory}
       />
       <FeaturedPrompts
-        prompts={promptItems}
+        prompts={prompts}
         selectedCategory={selectedCategory}
         searchQuery={searchQuery}
       />

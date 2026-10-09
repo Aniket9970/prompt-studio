@@ -113,16 +113,22 @@ export const FeaturedPrompts: React.FC<FeaturedPromptsProps> = ({
           </div>
         ) : (
           <div className="text-center py-20 bg-[#F7F8FC] rounded-[32px] border border-[#E8E9F0]">
-            <p className="text-xl font-bold text-[#1A1A18] mb-2">No previews match your criteria</p>
-            <p className="text-sm text-[#8B8E9A] mb-6">
-              Try choosing another category or clearing the current filter.
+            <p className="text-xl font-bold text-[#1A1A18] mb-2">
+              {prompts.length === 0 ? 'No Prompts Published Yet' : 'No previews match your criteria'}
             </p>
-            <button
-              onClick={() => setActiveTab('All')}
-              className="px-6 py-3 bg-[#1A1A18] text-white rounded-xl font-bold text-xs uppercase tracking-wider"
-            >
-              Reset Filters
-            </button>
+            <p className="text-sm text-[#8B8E9A] mb-6 max-w-md mx-auto">
+              {prompts.length === 0
+                ? 'Official prompts will appear here as soon as they are uploaded by PROMPT STUDIO.'
+                : 'Try choosing another category or clearing the current filter.'}
+            </p>
+            {prompts.length > 0 && (
+              <button
+                onClick={() => setActiveTab('All')}
+                className="px-6 py-3 bg-[#1A1A18] text-white rounded-xl font-bold text-xs uppercase tracking-wider"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         )}
 
