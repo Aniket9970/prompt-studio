@@ -73,7 +73,7 @@ export const ConfirmationPage: React.FC = () => {
                 Order Confirmed!
               </h1>
               <p className="text-xl text-[#1A1A18]/60 font-medium">
-                Order #{orderId} • <TextShimmer duration={2} className="text-[#1A1A18] font-bold">Your prompts are ready to download</TextShimmer>
+                {orderId ? `Order #${orderId} • ` : ''}<TextShimmer duration={2} className="text-[#1A1A18] font-bold">Your prompts are ready to download</TextShimmer>
               </p>
             </motion.div>
           </div>

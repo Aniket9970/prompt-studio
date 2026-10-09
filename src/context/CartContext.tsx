@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PromptItem, CartItem, OrderRecord } from '../types';
-import { promptItems } from '../data/prompts';
 
 interface CartContextType {
   cart: CartItem[];
@@ -18,25 +17,12 @@ interface CartContextType {
   orderId: string;
   orders: OrderRecord[];
   addOrder: (items: CartItem[], total: number, paymentMethod?: string) => string;
+  deleteOrder: (orderId: string) => void;
+  deletePromptFromOrder: (orderId: string, promptId: string) => void;
+  clearOrders: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-
-const initialSampleOrders: OrderRecord[] = [
-  {
-    id: 'PS-884210',
-    date: 'Oct 8, 2026',
-    items: [
-      { prompt: promptItems[0], quantity: 1 },
-      { prompt: promptItems[1], quantity: 1 },
-    ],
-    subtotal: 12.00,
-    discount: 1.20,
-    total: 10.80,
-    status: 'Completed',
-    paymentMethod: 'Credit Card',
-  },
-];
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Cart is empty by default so no unwanted prompts appear in cart on load/login
@@ -57,20 +43,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [discountRate, setDiscountRate] = useState(0);
   const [promoError, setPromoError] = useState<string | null>(null);
   const [lastOrderItems, setLastOrderItems] = useState<CartItem[]>([]);
-  const [orderId, setOrderId] = useState('PS-884210');
+  const [orderId, setOrderId] = useState<string>('');
 
-  // Orders stored in state and localStorage
+  // Orders stored in state and localStorage - NO dummy data
   const [orders, setOrders] = useState<OrderRecord[]>(() => {
     try {
       const saved = localStorage.getItem('ps_orders');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          // Filter out any legacy dummy order PS-884210
+          return parsed.filter((order) => order.id !== 'PS-884210');
+        }
       }
     } catch {
       // ignore
     }
-    return initialSampleOrders;
+    return [];
   });
 
   // Sync cart to localStorage
@@ -82,10 +71,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [cart]);
 
-  // Sync orders to localStorage
+  // Sync orders to localStorage (and cleanse any dummy PS-884210)
   useEffect(() => {
     try {
-      localStorage.setItem('ps_orders', JSON.stringify(orders));
+      const cleaned = orders.filter((o) => o.id !== 'PS-884210');
+      localStorage.setItem('ps_orders', JSON.stringify(cleaned));
     } catch {
       // ignore
     }
@@ -117,10 +107,44 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: 'Completed',
       paymentMethod,
     };
-    setOrders((prev) => [newOrder, ...prev]);
+    setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== 'PS-884210')]);
     setOrderId(newOrderId);
     setLastOrderItems([...items]);
     return newOrderId;
+  };
+
+  const deleteOrder = (orderIdToDelete: string) => {
+    setOrders((prev) => prev.filter((order) => order.id !== orderIdToDelete));
+  };
+
+  const deletePromptFromOrder = (orderIdTarget: string, promptIdToDelete: string) => {
+    setOrders((prev) =>
+      prev
+        .map((order) => {
+          if (order.id !== orderIdTarget) return order;
+          const updatedItems = order.items.filter((item) => item.prompt.id !== promptIdToDelete);
+          const newSubtotal = updatedItems.reduce((acc, item) => {
+            const price = typeof item.prompt.price === 'number' ? item.prompt.price : 0;
+            return acc + price * item.quantity;
+          }, 0);
+          return {
+            ...order,
+            items: updatedItems,
+            subtotal: newSubtotal,
+            total: Math.max(0, newSubtotal - order.discount),
+          };
+        })
+        .filter((order) => order.items.length > 0)
+    );
+  };
+
+  const clearOrders = () => {
+    setOrders([]);
+    try {
+      localStorage.removeItem('ps_orders');
+    } catch {
+      // ignore
+    }
   };
 
   const clearCart = () => {
@@ -185,6 +209,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         orderId,
         orders,
         addOrder,
+        deleteOrder,
+        deletePromptFromOrder,
+        clearOrders,
       }}
     >
       {children}

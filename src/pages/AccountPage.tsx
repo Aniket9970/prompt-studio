@@ -13,6 +13,7 @@ import {
   Download,
   Sparkles,
   ShieldCheck,
+  Trash2,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -28,7 +29,7 @@ export const AccountPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { orders } = useCart();
+  const { orders, deleteOrder, deletePromptFromOrder, clearOrders } = useCart();
   const { favorites } = useFavorites();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
@@ -246,18 +247,31 @@ export const AccountPage: React.FC = () => {
             exit={{ opacity: 0 }}
             className="space-y-8"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="font-display font-extrabold text-2xl text-[#1A1A18]">Order History</h2>
                 <p className="text-sm text-[#6B6D75] mt-1">Review your receipts and instantly copy prompt templates.</p>
               </div>
-              <Link
-                to="/browse"
-                className="text-xs font-bold text-[#8AAAFF] hover:underline flex items-center gap-1"
-              >
-                <span>Browse more prompts</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+              <div className="flex items-center gap-4">
+                {orders.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearOrders}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition-all active:scale-95 shadow-sm"
+                    title="Delete all order records"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Clear All Orders</span>
+                  </button>
+                )}
+                <Link
+                  to="/browse"
+                  className="text-xs font-bold text-[#8AAAFF] hover:underline flex items-center gap-1"
+                >
+                  <span>Browse more prompts</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
 
             {orders.length === 0 ? (
@@ -302,10 +316,21 @@ export const AccountPage: React.FC = () => {
                         <span className="font-semibold text-[#1A1A18]/80">{order.paymentMethod || 'Card'}</span>
                       </div>
                     </div>
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 border border-emerald-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {order.status}
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        {order.status}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => deleteOrder(order.id)}
+                        title="Delete entire order"
+                        className="flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 border border-[#E8E9F0] hover:border-rose-200 rounded-full text-xs font-bold transition-all active:scale-95 shadow-sm"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete Order</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Order Items */}
@@ -388,6 +413,15 @@ export const AccountPage: React.FC = () => {
                             >
                               <ExternalLink className="w-4 h-4" />
                             </Link>
+
+                            <button
+                              type="button"
+                              onClick={() => deletePromptFromOrder(order.id, item.prompt.id)}
+                              title="Delete Prompt from this order"
+                              className="p-2 rounded-xl border border-[#E8E9F0] hover:border-rose-200 hover:bg-rose-50 text-[#1A1A18]/50 hover:text-rose-600 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       );
