@@ -1,5 +1,5 @@
 -- ==============================================================================
--- PROMPT STUDIO - Supabase Database Schema
+-- PROMPT STUDIO - Supabase Database Schema (Idempotent / Safe to re-run)
 -- Run this script in your Supabase SQL Editor (Dashboard -> SQL Editor -> New query)
 -- ==============================================================================
 
@@ -77,31 +77,40 @@ ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 
--- 7. Public Read Policies
+-- 7. Public Read Policies (Safe drop and recreate)
+DROP POLICY IF EXISTS "Public prompts are viewable by everyone" ON public.prompts;
 CREATE POLICY "Public prompts are viewable by everyone" 
     ON public.prompts FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Public reviews are viewable by everyone" ON public.reviews;
 CREATE POLICY "Public reviews are viewable by everyone" 
     ON public.reviews FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can view their own orders" ON public.orders;
 CREATE POLICY "Users can view their own orders" 
     ON public.orders FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can view their own favorites" ON public.favorites;
 CREATE POLICY "Users can view their own favorites" 
     ON public.favorites FOR SELECT USING (true);
 
--- 8. Insert & Update Policies
+-- 8. Insert & Update Policies (Safe drop and recreate)
+DROP POLICY IF EXISTS "Allow insert for prompts" ON public.prompts;
 CREATE POLICY "Allow insert for prompts" 
     ON public.prompts FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow insert for reviews" ON public.reviews;
 CREATE POLICY "Allow insert for reviews" 
     ON public.reviews FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow insert for orders" ON public.orders;
 CREATE POLICY "Allow insert for orders" 
     ON public.orders FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow insert for favorites" ON public.favorites;
 CREATE POLICY "Allow insert for favorites" 
     ON public.favorites FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow delete for favorites" ON public.favorites;
 CREATE POLICY "Allow delete for favorites" 
     ON public.favorites FOR DELETE USING (true);
