@@ -48,15 +48,41 @@ const PromptsContext = createContext<PromptsContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'prompt_studio_prompts_v1';
 
+export const PERMANENTLY_EXCLUDED_IDS = [
+  'ab5fed01-7def-4fda-ae08-2e096d481928',
+  'fb773d9d-3444-412d-b620-04f9cc3b6b92',
+  'cb090fcf-9f6c-45ee-9dd5-820a7dcef230',
+  'd044676f-9179-4394-b70c-c2f914501437', // Unwanted 'hello' / 'sdfg'
+  'e05f043f-9092-49f2-b747-60e5b34f024a', // Unwanted 'Cloudflare R2 Test Prompt'
+];
+
+export const PERMANENTLY_EXCLUDED_TITLES = [
+  'test',
+  'agent grove system',
+  'rls test',
+  'cloudflare r2 test prompt',
+  'hello',
+];
+
 export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [prompts, setPrompts] = useState<PromptItem[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+      const deletedIds: string[] = JSON.parse(
+        localStorage.getItem('ps_deleted_prompt_ids') || '[]'
+      );
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const validCached = parsed.filter((p) => {
+            const id = String(p.id);
+            const title = (p.title || '').toLowerCase().trim();
+            if (PERMANENTLY_EXCLUDED_IDS.includes(id) || deletedIds.includes(id)) return false;
+            if (PERMANENTLY_EXCLUDED_TITLES.includes(title)) return false;
+            return true;
+          });
           // Merge with initialDummyPrompts to ensure all R2 CDN links are active immediately
-          return parsed.map((p) => {
+          return validCached.map((p) => {
             if (!p.previewVideo || p.previewVideo.startsWith('data:')) {
               const prefix = p.id.slice(0, 8);
               const match = initialDummyPrompts.find(
@@ -234,17 +260,12 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const deletedIds: string[] = JSON.parse(
           localStorage.getItem('ps_deleted_prompt_ids') || '[]'
         );
-        const legacyTestIds = [
-          'ab5fed01-7def-4fda-ae08-2e096d481928',
-          'fb773d9d-3444-412d-b620-04f9cc3b6b92',
-          'cb090fcf-9f6c-45ee-9dd5-820a7dcef230',
-        ];
 
         const validRows = data.filter((row: any) => {
           const id = String(row.id);
           const title = (row.title || '').toLowerCase().trim();
-          if (legacyTestIds.includes(id) || deletedIds.includes(id)) return false;
-          if (title === 'test' || title === 'agent grove system' || title === 'rls test') return false;
+          if (PERMANENTLY_EXCLUDED_IDS.includes(id) || deletedIds.includes(id)) return false;
+          if (PERMANENTLY_EXCLUDED_TITLES.includes(title)) return false;
           return true;
         });
 
@@ -269,12 +290,16 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Ensure built-in initial prompts (e.g. Anchor AI Landing) are merged so no curated prompts are lost
         const combinedPrompts = [...mappedPrompts];
         initialDummyPrompts.forEach((initPrompt) => {
+          const initId = String(initPrompt.id);
+          const initTitle = (initPrompt.title || '').toLowerCase().trim();
+          if (PERMANENTLY_EXCLUDED_IDS.includes(initId) || deletedIds.includes(initId)) return;
+          if (PERMANENTLY_EXCLUDED_TITLES.includes(initTitle)) return;
           const exists = combinedPrompts.some(
             (p) =>
               p.id === initPrompt.id ||
               p.title.toLowerCase() === initPrompt.title.toLowerCase()
           );
-          if (!exists && !deletedIds.includes(initPrompt.id)) {
+          if (!exists) {
             combinedPrompts.push(initPrompt);
           }
         });
@@ -520,6 +545,7 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const getPromptById = (id: string) => {
+    if (PERMANENTLY_EXCLUDED_IDS.includes(id)) return undefined;
     return prompts.find((p) => p.id === id);
   };
 

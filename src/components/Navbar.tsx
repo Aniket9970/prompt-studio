@@ -58,13 +58,13 @@ export const Navbar: React.FC = () => {
     <nav className="sticky top-0 z-50 bg-[#FFFEFB]/90 backdrop-blur-md border-b border-[#E8E9F0] transition-colors transform-gpu">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 md:px-8 h-16 sm:h-20 flex items-center justify-between">
         <div className="flex items-center gap-6 sm:gap-12 lg:gap-16">
-          <Link to="/" id="nav-logo" className="flex items-center gap-2 sm:gap-2.5 group">
+          <Link to="/" id="nav-logo" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
             <Magnetic intensity={0.2} range={60}>
-              <span className="w-8 h-8 sm:w-9 sm:h-9 bg-[#1A1A18] rounded-xl flex items-center justify-center text-white transition-standard group-hover:scale-105 shadow-sm">
+              <span className="w-8 h-8 sm:w-9 sm:h-9 bg-[#1A1A18] rounded-xl flex items-center justify-center text-white transition-standard group-hover:scale-105 shadow-sm shrink-0">
                 <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white" />
               </span>
             </Magnetic>
-            <span className="font-display font-bold text-lg sm:text-2xl tracking-tighter text-[#1A1A18]">
+            <span className="font-display font-bold text-base sm:text-2xl tracking-tighter text-[#1A1A18] whitespace-nowrap">
               PROMPT STUDIO
             </span>
           </Link>
@@ -245,6 +245,23 @@ export const Navbar: React.FC = () => {
             </Link>
           </Magnetic>
 
+          {/* Mobile Direct Log In Button (Visible directly on mobile phone navbar when signed out) */}
+          <div className="sm:hidden flex items-center">
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <button
+                  type="button"
+                  id="mobile-nav-login-button"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#1A1A18] text-white hover:bg-[#3A3A42] transition-colors shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
+                  aria-label="Log in to Prompt Studio"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Log in</span>
+                </button>
+              </SignInButton>
+            </Show>
+          </div>
+
           {/* Desktop Auth Controls */}
           <div className="hidden sm:flex items-center gap-3">
             <Show when="signed-out">
@@ -324,6 +341,43 @@ export const Navbar: React.FC = () => {
             className="lg:hidden bg-[#FFFEFB] border-b border-[#E8E9F0] overflow-hidden shadow-xl"
           >
             <div className="px-5 py-6 space-y-5 max-h-[calc(100vh-80px)] overflow-y-auto">
+              {/* Account Quick Banner at Top of Mobile Menu */}
+              <Show when="signed-out">
+                <div className="p-3.5 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1A1A18]">Welcome to Prompt Studio</p>
+                    <p className="text-[11px] text-[#6B6D75] truncate">Log in to unlock prompts & downloads</p>
+                  </div>
+                  <SignInButton mode="modal">
+                    <button
+                      type="button"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-3.5 py-1.5 bg-[#1A1A18] text-white text-xs font-bold rounded-xl hover:bg-[#3A3A42] transition-colors shrink-0 shadow-sm cursor-pointer whitespace-nowrap"
+                    >
+                      Log in
+                    </button>
+                  </SignInButton>
+                </div>
+              </Show>
+
+              <Show when="signed-in">
+                <div className="p-3 bg-[#F7F8FC] border border-[#E8E9F0] rounded-2xl flex items-center gap-3">
+                  <img
+                    src={user?.imageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=promptstudio'}
+                    alt={user?.fullName || 'User'}
+                    className="w-9 h-9 rounded-xl object-cover border border-[#E8E9F0] bg-white"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-[#1A1A18] truncate">
+                      {user?.fullName || user?.firstName || 'Creator Member'}
+                    </p>
+                    <p className="text-[11px] text-[#6B6D75] truncate">
+                      {user?.primaryEmailAddress?.emailAddress || 'Connected'}
+                    </p>
+                  </div>
+                </div>
+              </Show>
+
               {/* Main Nav Links */}
               <div className="space-y-1">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-[#1A1A18]/40 px-3 pb-1">

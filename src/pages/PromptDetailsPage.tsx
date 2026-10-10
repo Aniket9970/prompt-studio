@@ -29,7 +29,7 @@ import { getSafeMediaUrl } from '../lib/utils';
 export const PromptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { prompts, getPromptById, trackPromptCopy, trackPromptView, fetchPromptVideo } = usePrompts();
+  const { prompts, isLoading, getPromptById, trackPromptCopy, trackPromptView, fetchPromptVideo } = usePrompts();
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isSignedIn } = useAuth();
@@ -38,8 +38,8 @@ export const PromptDetailsPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [added, setAdded] = useState(false);
 
-  // Find prompt by ID or fallback to first prompt
-  const prompt = (id ? getPromptById(id) : undefined) || prompts[0];
+  // Find prompt by ID or fallback to first prompt only when no ID in URL
+  const prompt = id ? getPromptById(id) : prompts[0];
   const relatedPrompts = prompt ? prompts.filter((p) => p.id !== prompt.id).slice(0, 4) : [];
 
   useEffect(() => {
@@ -50,6 +50,15 @@ export const PromptDetailsPage: React.FC = () => {
       }
     }
   }, [prompt?.id, prompt?.previewVideo, trackPromptView, fetchPromptVideo]);
+
+  if (isLoading && !prompt) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 py-20 text-center bg-[#FFFEFB]">
+        <div className="w-8 h-8 border-2 border-[#1A1A18] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs font-bold text-[#8B8E9A]">Loading prompt details...</p>
+      </div>
+    );
+  }
 
   if (!prompt) {
     return (
