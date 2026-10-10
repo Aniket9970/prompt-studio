@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth, useClerk } from '@clerk/react';
 import { useFavorites } from '../context/FavoritesContext';
 import { usePrompts } from '../context/PromptsContext';
+import { getSafeMediaUrl } from '../lib/utils';
 
 interface PromptCardProps {
   prompt: PromptItem;
@@ -22,8 +23,9 @@ const fallbackIcons: Record<string, React.FC<{ className?: string }>> = {
 
 export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   const [imageError, setImageError] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isInViewport, setIsInViewport] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -34,17 +36,18 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   const { trackPromptCopy, fetchPromptVideo } = usePrompts();
   const favorited = isFavorite(prompt.id);
 
-  // Lazy-load video and track viewport visibility to keep CPU/GPU blazing fast
+  const safeVideoUrl = !videoError ? getSafeMediaUrl(prompt.previewVideo) : undefined;
+
+  // Viewport tracking to fetch video if needed
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        setIsInViewport(entry.isIntersecting);
         if (entry.isIntersecting && !prompt.previewVideo) {
           fetchPromptVideo(prompt.id);
         }
       },
-      { rootMargin: '100px 0px 100px 0px' }
+      { rootMargin: '200px 0px 200px 0px' }
     );
 
     if (cardRef.current) {
@@ -60,15 +63,11 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
     toggleFavorite(prompt);
   };
 
-  // Play/pause video based on viewport visibility to free GPU during 144Hz scroll
+  // Ensure continuous autoplay without interruption
   useEffect(() => {
-    if (!videoRef.current) return;
-    if (isInViewport) {
-      videoRef.current.play().catch(() => {});
-    } else {
-      videoRef.current.pause();
-    }
-  }, [isInViewport]);
+    if (!videoRef.current || !safeVideoUrl) return;
+    videoRef.current.play().catch(() => {});
+  }, [safeVideoUrl]);
 
   const handleCopyPrompt = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -87,7 +86,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
   };
 
   return (
-    <div ref={cardRef} className="h-full w-full [content-visibility:auto] [contain-intrinsic-size:300px_400px] sm:[contain-intrinsic-size:380px_450px]">
+    <div ref={cardRef} className="h-full w-full">
       <Tilt
         rotationFactor={5}
         isRevese={false}
@@ -129,17 +128,37 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
             </button>
 
             <Link to={`/prompt/${prompt.id}`} className="block w-full h-full relative group">
-              {prompt.previewVideo && isInViewport ? (
+              {safeVideoUrl ? (
                 <div className="w-full h-full relative overflow-hidden bg-black/5">
+                  {/* Loading shimmer while video initializes */}
+                  {!isVideoLoaded && (
+                    <div className="absolute inset-0 bg-[#EEF0F5] flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border-2 border-[#8AAAFF]/30 border-t-[#8AAAFF] animate-spin" />
+                    </div>
+                  )}
                   <video
                     ref={videoRef}
-                    src={prompt.previewVideo}
+                    src={safeVideoUrl}
+                    autoPlay
                     muted
                     loop
-                    autoPlay
                     playsInline
-                    preload="metadata"
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    preload="auto"
+                    onLoadedData={() => {
+                      setIsVideoLoaded(true);
+                      videoRef.current?.play().catch(() => {});
+                    }}
+                    onCanPlay={() => {
+                      setIsVideoLoaded(true);
+                      videoRef.current?.play().catch(() => {});
+                    }}
+                    onError={() => {
+                      setVideoError(true);
+                      setIsVideoLoaded(false);
+                    }}
+                    className={`w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105 ${
+                      isVideoLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
                   />
                 </div>
               ) : prompt.imageUrl && !imageError ? (
@@ -154,7 +173,8 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt }) => {
                 <div className="w-11 h-11 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/60 shadow-sm flex items-center justify-center text-[#1A1A18]/60 transition-transform duration-300 group-hover:scale-110">
                   <FallbackIcon className="w-5 h-5 text-[#1A1A18]/70" />
                 </div>
-                <span className="mt-2 text-[10px] font-bold uppercase tracking-wider text-[#1A1A18]/40">
+                <span className="mt-2 text-[10px] font-bold uppercase tracking-wider text-[#1A1A18]/40 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#8AAAFF] animate-pulse" />
                   {prompt.model || 'Interactive Prompt'}
                 </span>
               </div>

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1149.0",
     "@clerk/react": "^6.17.7",
     "@supabase/supabase-js": "^2.109.0",
     "clsx": "^2.1.1",

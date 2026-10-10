@@ -24,6 +24,7 @@ import { BorderTrail } from '../components/motion-primitives/border-trail';
 import { Magnetic } from '../components/motion-primitives/magnetic';
 import { AnimatedBackground } from '../components/motion-primitives/animated-background';
 import { useAuth, useClerk } from '@clerk/react';
+import { getSafeMediaUrl } from '../lib/utils';
 
 export const PromptDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -115,9 +116,9 @@ export const PromptDetailsPage: React.FC = () => {
                   className="bg-gradient-to-r from-transparent via-[#8AAAFF] to-transparent opacity-60"
                   transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
                 />
-                {prompt.previewVideo ? (
+                {getSafeMediaUrl(prompt.previewVideo) ? (
                   <video
-                    src={prompt.previewVideo}
+                    src={getSafeMediaUrl(prompt.previewVideo)}
                     controls
                     autoPlay
                     muted

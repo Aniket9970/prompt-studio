@@ -122,3 +122,39 @@ CREATE POLICY "Allow insert for favorites"
 DROP POLICY IF EXISTS "Allow delete for favorites" ON public.favorites;
 CREATE POLICY "Allow delete for favorites" 
     ON public.favorites FOR DELETE USING (true);
+
+-- ==============================================================================
+-- 9. Storage Setup for Video & Image Media (Bucket: prompt-media)
+-- ==============================================================================
+-- Creates the public storage bucket so videos and images upload to Cloud Storage CDN
+-- instead of bloating the database with heavy base64 strings.
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'prompt-media',
+    'prompt-media',
+    true,
+    52428800, -- 50 MB per file limit
+    ARRAY['video/mp4', 'video/webm', 'video/quicktime', 'video/ogg', 'image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Public access policies for prompt-media storage bucket
+DROP POLICY IF EXISTS "Allow public download of prompt-media" ON storage.objects;
+CREATE POLICY "Allow public download of prompt-media"
+    ON storage.objects FOR SELECT
+    USING (bucket_id = 'prompt-media');
+
+DROP POLICY IF EXISTS "Allow public upload of prompt-media" ON storage.objects;
+CREATE POLICY "Allow public upload of prompt-media"
+    ON storage.objects FOR INSERT
+    WITH CHECK (bucket_id = 'prompt-media');
+
+DROP POLICY IF EXISTS "Allow update of prompt-media" ON storage.objects;
+CREATE POLICY "Allow update of prompt-media"
+    ON storage.objects FOR UPDATE
+    USING (bucket_id = 'prompt-media');
+
+DROP POLICY IF EXISTS "Allow delete of prompt-media" ON storage.objects;
+CREATE POLICY "Allow delete of prompt-media"
+    ON storage.objects FOR DELETE
+    USING (bucket_id = 'prompt-media');

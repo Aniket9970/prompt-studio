@@ -74,7 +74,7 @@ export const CreatorPage: React.FC = () => {
   const [price, setPrice] = useState('19');
   const [previewVideo, setPreviewVideo] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [videoSourceMode, setVideoSourceMode] = useState<'device' | 'url'>('device');
+  const [videoSourceMode, setVideoSourceMode] = useState<'device' | 'url'>('url');
   const [uploadedVideoName, setUploadedVideoName] = useState<string>('');
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [videoLoading, setVideoLoading] = useState<boolean>(false);
@@ -87,21 +87,23 @@ export const CreatorPage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 52428800) {
+      alert('Video file exceeds 50MB. Please compress your video or use a direct URL from Cloudinary, Streamable, or S3.');
+      return;
+    }
+
     setSelectedVideoFile(file);
     setVideoLoading(true);
     setUploadedVideoName(file.name);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setPreviewVideo(dataUrl);
+    try {
+      const localBlobUrl = URL.createObjectURL(file);
+      setPreviewVideo(localBlobUrl);
+    } catch {
+      // fallback
+    } finally {
       setVideoLoading(false);
-    };
-    reader.onerror = () => {
-      alert('Error reading video file. Please try another file.');
-      setVideoLoading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,12 +112,13 @@ export const CreatorPage: React.FC = () => {
 
     setSelectedImageFile(file);
     setUploadedImageName(file.name);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setImageUrl(dataUrl);
-    };
-    reader.readAsDataURL(file);
+
+    try {
+      const localBlobUrl = URL.createObjectURL(file);
+      setImageUrl(localBlobUrl);
+    } catch {
+      // fallback
+    }
   };
 
   const [promptTemplate, setPromptTemplate] = useState('');
@@ -208,28 +211,39 @@ export const CreatorPage: React.FC = () => {
       let finalVideoUrl = previewVideo.trim() || undefined;
       let finalImageUrl = imageUrl.trim() || undefined;
 
-      // 1. Upload video file to Supabase Storage if picked from device
+      // 1. Upload video file directly to Cloudflare R2 CDN if picked from device
       if (selectedVideoFile) {
-        const { url: supabaseVideoUrl, error: videoUploadError } = await uploadMediaToSupabase(
+        const { url: uploadedVideoUrl, error: videoUploadError } = await uploadMediaToSupabase(
           selectedVideoFile,
           'videos'
         );
-        if (supabaseVideoUrl) {
-          finalVideoUrl = supabaseVideoUrl;
-        } else if (videoUploadError) {
-          console.warn('Supabase storage upload notice (using fallback preview):', videoUploadError);
+        if (uploadedVideoUrl) {
+          finalVideoUrl = uploadedVideoUrl;
+        } else {
+          setIsPublishing(false);
+          alert(
+            `Video upload failed: ${videoUploadError || 'Unknown error'}.\n\n` +
+            `Please make sure your Cloudflare R2 bucket has CORS enabled, or paste the video URL directly.`
+          );
+          return;
         }
+      } else if (finalVideoUrl && (finalVideoUrl.startsWith('blob:') || finalVideoUrl.startsWith('data:'))) {
+        finalVideoUrl = undefined;
       }
 
       // 2. Upload image file to Supabase Storage if picked from device
       if (selectedImageFile) {
-        const { url: supabaseImageUrl } = await uploadMediaToSupabase(
+        const { url: supabaseImageUrl, error: imageUploadError } = await uploadMediaToSupabase(
           selectedImageFile,
           'images'
         );
         if (supabaseImageUrl) {
           finalImageUrl = supabaseImageUrl;
+        } else {
+          console.warn('Image storage upload error:', imageUploadError);
         }
+      } else if (finalImageUrl && (finalImageUrl.startsWith('blob:') || finalImageUrl.startsWith('data:'))) {
+        finalImageUrl = undefined;
       }
 
       const keyFeatures = [
@@ -880,8 +894,21 @@ export const CreatorPage: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Mode Toggle */}
+                    {/* Mode Toggle: Cloudflare / URL prioritized */}
                     <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E8E9F0] self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setVideoSourceMode('url')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          videoSourceMode === 'url'
+                            ? 'bg-[#1A1A18] text-white shadow-sm'
+                            : 'text-[#6B6D75] hover:text-[#1A1A18]'
+                        }`}
+                      >
+                        <Film className="w-3.5 h-3.5" />
+                        <span>Cloudflare / Video URL</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => setVideoSourceMode('device')}
@@ -894,23 +921,46 @@ export const CreatorPage: React.FC = () => {
                         <Upload className="w-3.5 h-3.5" />
                         <span>Upload from Device</span>
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setVideoSourceMode('url')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          videoSourceMode === 'url'
-                            ? 'bg-[#1A1A18] text-white shadow-sm'
-                            : 'text-[#6B6D75] hover:text-[#1A1A18]'
-                        }`}
-                      >
-                        <Film className="w-3.5 h-3.5" />
-                        <span>Video URL / Path</span>
-                      </button>
                     </div>
                   </div>
 
-                  {videoSourceMode === 'device' ? (
+                  {videoSourceMode === 'url' ? (
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="e.g. https://pub-xxxxxx.r2.dev/preview.mp4 or Cloudflare Stream URL"
+                        value={previewVideo}
+                        onChange={(e) => {
+                          setPreviewVideo(e.target.value);
+                          setUploadedVideoName('');
+                        }}
+                        className="w-full px-4 py-3 rounded-xl border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-mono outline-none bg-white"
+                      />
+
+                      {previewVideo.trim() && (
+                        <div className="mt-2.5 p-3 bg-white rounded-xl border border-emerald-200 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
+                            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span>
+                              {previewVideo.includes('r2.dev') || previewVideo.includes('cloudflare')
+                                ? 'Cloudflare CDN link detected • Fast global streaming'
+                                : 'External video link active • 0 bytes DB storage'}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono text-[#8B8E9A] bg-[#F7F8FC] px-2 py-0.5 rounded border border-[#E8E9F0] truncate max-w-[200px]">
+                            {previewVideo}
+                          </span>
+                        </div>
+                      )}
+
+                      <p className="mt-2 text-[11px] text-[#6B6D75] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#8AAAFF] shrink-0" />
+                        <span>
+                          <strong>Recommended:</strong> Paste your public <strong>Cloudflare R2</strong>, <strong>Cloudflare Stream</strong>, or direct CDN <code>.mp4</code> URL. Your database stores only the link, keeping your site blazing fast.
+                        </span>
+                      </p>
+                    </div>
+                  ) : (
                     <div>
                       {previewVideo && uploadedVideoName ? (
                         <div className="p-4 bg-white rounded-xl border border-emerald-200 flex items-center justify-between gap-4">
@@ -953,7 +1003,7 @@ export const CreatorPage: React.FC = () => {
                             Click to select video from this device
                           </span>
                           <span className="text-[11px] text-[#8B8E9A]">
-                            Supports MP4, WebM, MOV video previews
+                            Supports MP4, WebM, MOV video previews (up to 50MB)
                           </span>
                           {videoLoading && (
                             <span className="mt-2 text-xs font-bold text-[#8AAAFF] animate-pulse">
@@ -962,19 +1012,6 @@ export const CreatorPage: React.FC = () => {
                           )}
                         </label>
                       )}
-                    </div>
-                  ) : (
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="e.g. https://your-cdn.com/demo.mp4"
-                        value={previewVideo}
-                        onChange={(e) => {
-                          setPreviewVideo(e.target.value);
-                          setUploadedVideoName('');
-                        }}
-                        className="w-full px-4 py-3 rounded-xl border border-[#E8E9F0] focus:border-[#1A1A18] text-xs font-mono outline-none bg-white"
-                      />
                     </div>
                   )}
 

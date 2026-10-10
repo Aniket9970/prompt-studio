@@ -7,6 +7,11 @@ import {
   mapRowToPrompt,
   mapPromptToRow,
 } from '../lib/supabase';
+import {
+  getCachedVideo,
+  setCachedVideo,
+  getAllCachedVideos,
+} from '../lib/mediaCache';
 
 export const DEFAULT_STUDIO_CREATOR: Creator = {
   name: 'PROMPT STUDIO',
@@ -49,8 +54,23 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge with initialDummyPrompts to ensure all R2 CDN links are active immediately
+          return parsed.map((p) => {
+            if (!p.previewVideo || p.previewVideo.startsWith('data:')) {
+              const prefix = p.id.slice(0, 8);
+              const match = initialDummyPrompts.find(
+                (init) =>
+                  init.id === p.id ||
+                  init.id.startsWith(prefix) ||
+                  init.title.toLowerCase() === (p.title || '').toLowerCase()
+              );
+              if (match?.previewVideo) {
+                return { ...p, previewVideo: match.previewVideo };
+              }
+            }
+            return p;
+          });
         }
       }
     } catch (e) {
@@ -82,35 +102,110 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [prompts]);
 
-  // Dedup set for video requests to avoid duplicate network fetches
-  const videoFetchInProgress = React.useRef<Set<string>>(new Set());
+  // High-speed parallel video queue with 3 concurrent workers and IndexedDB persistence
+  const videoQueueRef = React.useRef<string[]>([]);
+  const activeWorkersRef = React.useRef<number>(0);
+  const fetchedVideosSetRef = React.useRef<Set<string>>(new Set());
+  const MAX_CONCURRENT_WORKERS = 3;
+
+  // Hydrate all previously cached videos instantly from local IndexedDB on mount
+  useEffect(() => {
+    getAllCachedVideos().then((cachedMap) => {
+      const keys = Object.keys(cachedMap);
+      if (keys.length > 0) {
+        setPrompts((prev) =>
+          prev.map((p) => (cachedMap[p.id] ? { ...p, previewVideo: cachedMap[p.id] } : p))
+        );
+        keys.forEach((k) => fetchedVideosSetRef.current.add(k));
+      }
+    });
+  }, []);
+
+  const processVideoQueue = useCallback(() => {
+    if (!isSupabaseConfigured) return;
+
+    while (
+      activeWorkersRef.current < MAX_CONCURRENT_WORKERS &&
+      videoQueueRef.current.length > 0
+    ) {
+      const nextId = videoQueueRef.current.shift();
+      if (!nextId || fetchedVideosSetRef.current.has(nextId)) continue;
+
+      activeWorkersRef.current++;
+
+      (async () => {
+        try {
+          // Check IndexedDB cache first for instant 0ms load
+          const cached = await getCachedVideo(nextId);
+          if (cached) {
+            fetchedVideosSetRef.current.add(nextId);
+            setPrompts((prev) =>
+              prev.map((p) => (p.id === nextId ? { ...p, previewVideo: cached } : p))
+            );
+            return;
+          }
+
+          // Otherwise fetch from Supabase with 3.5s timeout protection
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Fetch preview timeout')), 3500)
+          );
+          const fetchPromise = supabase
+            .from('prompts')
+            .select('id, preview_video')
+            .eq('id', nextId)
+            .single();
+
+          const result: any = await Promise.race([fetchPromise, timeoutPromise]);
+          const data = result?.data;
+          const error = result?.error;
+
+          if (!error && data?.preview_video) {
+            fetchedVideosSetRef.current.add(nextId);
+            setCachedVideo(nextId, data.preview_video);
+            setPrompts((prev) =>
+              prev.map((p) =>
+                p.id === nextId ? { ...p, previewVideo: data.preview_video } : p
+              )
+            );
+          }
+        } catch (err) {
+          console.warn('Fast video load notice for prompt:', nextId, err);
+        } finally {
+          activeWorkersRef.current--;
+          processVideoQueue();
+        }
+      })();
+    }
+  }, []);
 
   // Fetch a single prompt video on-demand (used when viewing prompt details or card)
-  const fetchPromptVideo = useCallback(async (id: string): Promise<string | null> => {
-    if (!isSupabaseConfigured || !id) return null;
-    if (videoFetchInProgress.current.has(id)) return null;
-
-    videoFetchInProgress.current.add(id);
-
-    try {
-      const { data, error } = await supabase
-        .from('prompts')
-        .select('preview_video')
-        .eq('id', id)
-        .single();
-
-      if (!error && data?.preview_video) {
+  const fetchPromptVideo = useCallback(
+    async (id: string): Promise<string | null> => {
+      if (!id) return null;
+      // If prompt already in initial dummy data, assign it immediately
+      const r2Match = initialDummyPrompts.find(
+        (p) => p.id === id || p.id.startsWith(id.slice(0, 8))
+      );
+      if (r2Match?.previewVideo) {
         setPrompts((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, previewVideo: data.preview_video } : p))
+          prev.map((p) => (p.id === id && !p.previewVideo ? { ...p, previewVideo: r2Match.previewVideo } : p))
         );
-        return data.preview_video;
+        fetchedVideosSetRef.current.add(id);
+        return r2Match.previewVideo;
       }
-    } catch (e) {
-      console.warn('Single prompt video load error:', e);
-      videoFetchInProgress.current.delete(id);
-    }
-    return null;
-  }, []);
+
+      if (!isSupabaseConfigured) return null;
+      if (fetchedVideosSetRef.current.has(id)) return null;
+
+      // High priority: put at front of queue so visible card loads immediately
+      if (!videoQueueRef.current.includes(id)) {
+        videoQueueRef.current.unshift(id);
+      }
+      processVideoQueue();
+      return null;
+    },
+    [processVideoQueue]
+  );
 
   // Fetch prompts directly from Supabase backend
   const fetchPromptsFromSupabase = useCallback(async () => {
@@ -153,13 +248,42 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return true;
         });
 
-        const mappedPrompts = validRows.map(mapRowToPrompt);
+        const mappedPrompts = validRows.map((row: any) => {
+          const prompt = mapRowToPrompt(row);
+          // If prompt does not have a preview video yet or has old base64, check if an R2 CDN video exists
+          if (!prompt.previewVideo || prompt.previewVideo.startsWith('data:')) {
+            const prefix = prompt.id.slice(0, 8);
+            const r2Match = initialDummyPrompts.find(
+              (p) =>
+                p.id === prompt.id ||
+                p.id.startsWith(prefix) ||
+                p.title.toLowerCase() === prompt.title.toLowerCase()
+            );
+            if (r2Match?.previewVideo) {
+              prompt.previewVideo = r2Match.previewVideo;
+            }
+          }
+          return prompt;
+        });
+
+        // Ensure built-in initial prompts (e.g. Anchor AI Landing) are merged so no curated prompts are lost
+        const combinedPrompts = [...mappedPrompts];
+        initialDummyPrompts.forEach((initPrompt) => {
+          const exists = combinedPrompts.some(
+            (p) =>
+              p.id === initPrompt.id ||
+              p.title.toLowerCase() === initPrompt.title.toLowerCase()
+          );
+          if (!exists && !deletedIds.includes(initPrompt.id)) {
+            combinedPrompts.push(initPrompt);
+          }
+        });
 
         // Instantly render all prompts to screen (preserving any previewVideo already fetched)
         setPrompts((prev) => {
-          return mappedPrompts.map((newP) => {
+          return combinedPrompts.map((newP) => {
             const existing = prev.find((p) => p.id === newP.id);
-            if (existing?.previewVideo) {
+            if (existing?.previewVideo && !existing.previewVideo.startsWith('data:')) {
               return { ...newP, previewVideo: existing.previewVideo };
             }
             return newP;
@@ -167,30 +291,16 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
         setIsLoading(false);
 
-        // Step 2: Pre-fetch video only for the top 3 cards in the hero section for instant playback without network congestion
-        const topIds = validRows.slice(0, 3).map((r: any) => String(r.id));
-        if (topIds.length > 0) {
-          try {
-            const { data: videoData, error: videoError } = await supabase
-              .from('prompts')
-              .select('id, preview_video')
-              .in('id', topIds);
-
-            if (!videoError && videoData && videoData.length > 0) {
-              setPrompts((currentPrompts) =>
-                currentPrompts.map((p) => {
-                  const match = videoData.find((v: any) => String(v.id) === String(p.id));
-                  if (match && match.preview_video) {
-                    return { ...p, previewVideo: match.preview_video };
-                  }
-                  return p;
-                })
-              );
-            }
-          } catch (e) {
-            console.warn('Initial top video load error:', e);
+        // Step 2: Queue only prompts that still lack a video into worker pool
+        combinedPrompts.forEach((p) => {
+          const id = String(p.id);
+          if (p.previewVideo) {
+            fetchedVideosSetRef.current.add(id);
+          } else if (!fetchedVideosSetRef.current.has(id) && !videoQueueRef.current.includes(id)) {
+            videoQueueRef.current.push(id);
           }
-        }
+        });
+        processVideoQueue();
       }
     } catch (err) {
       console.warn('Failed to load prompts from Supabase:', err);
@@ -198,7 +308,7 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [processVideoQueue]);
 
   // Initial fetch and Realtime subscription
   useEffect(() => {
@@ -305,6 +415,14 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.warn('Failed to store deleted prompt id:', e);
     }
 
+    // Find the prompt before removing to clean up its Cloudflare R2 video
+    const promptToDelete = prompts.find((p) => p.id === id);
+    if (promptToDelete?.previewVideo && promptToDelete.previewVideo.includes('r2.dev')) {
+      import('../lib/cloudflareR2')
+        .then(({ deleteVideoFromR2 }) => deleteVideoFromR2(promptToDelete.previewVideo!))
+        .catch((err) => console.warn('Could not clean up R2 video:', err));
+    }
+
     setPrompts((prev) => prev.filter((p) => p.id !== id));
 
     if (isSupabaseConfigured) {
@@ -321,6 +439,19 @@ export const PromptsProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Update prompt in Supabase backend
   const updatePrompt = async (id: string, updated: Partial<PromptItem>): Promise<void> => {
+    // If the video is being replaced or removed, clean up the old video in Cloudflare R2
+    const currentPrompt = prompts.find((p) => p.id === id);
+    if (
+      updated.previewVideo !== undefined &&
+      currentPrompt?.previewVideo &&
+      currentPrompt.previewVideo !== updated.previewVideo &&
+      currentPrompt.previewVideo.includes('r2.dev')
+    ) {
+      import('../lib/cloudflareR2')
+        .then(({ deleteVideoFromR2 }) => deleteVideoFromR2(currentPrompt.previewVideo!))
+        .catch((err) => console.warn('Could not clean up replaced R2 video:', err));
+    }
+
     setPrompts((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;

@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, Star, LayoutGrid, List, ArrowLeft, ArrowRight, X } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, SlidersHorizontal, Star, LayoutGrid, List, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePrompts } from '../context/PromptsContext';
 import { PromptCard } from '../components/PromptCard';
 import { motion, AnimatePresence } from 'motion/react';
 import { TextLoop } from '../components/motion-primitives/text-loop';
 import { TextEffect } from '../components/motion-primitives/text-effect';
+
+const PROMPTS_PER_PAGE = 15;
 
 export const BrowsePage: React.FC = () => {
   const { prompts, getPromptPopularity } = usePrompts();
@@ -15,8 +17,13 @@ export const BrowsePage: React.FC = () => {
   const [minRating4, setMinRating4] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>('Popular');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Reset to page 1 whenever search, categories, models, price, rating, or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategories, selectedModels, maxPrice, minRating4, sortBy]);
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -37,6 +44,7 @@ export const BrowsePage: React.FC = () => {
     setMinRating4(false);
     setSearch('');
     setSortBy('Popular');
+    setCurrentPage(1);
   };
 
   const filteredPrompts = useMemo(() => {
@@ -259,7 +267,7 @@ export const BrowsePage: React.FC = () => {
             </h1>
             <div className="text-sm sm:text-lg text-[#1A1A18]/60 font-medium mb-6 sm:mb-10 max-w-2xl">
               <TextEffect preset="fade-in-blur" speedReveal={1.2}>
-                Discover 247 high-performance prompt assets for your creative projects.
+                Discover high-performance prompt assets for your creative projects.
               </TextEffect>
             </div>
           </motion.div>
@@ -362,135 +370,161 @@ export const BrowsePage: React.FC = () => {
           {/* Main Content Area */}
           <div className="flex-1">
             {/* Top Sorting & View Controls */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12">
-              <div className="text-xs sm:text-sm font-bold text-[#1A1A18]/40">
-                Showing {filteredPrompts.length > 0 ? `1-${filteredPrompts.length}` : '0'} of {prompts.length} templates
-              </div>
+            {(() => {
+              const totalPages = Math.max(1, Math.ceil(filteredPrompts.length / PROMPTS_PER_PAGE));
+              const startIndex = (currentPage - 1) * PROMPTS_PER_PAGE;
+              const endIndex = Math.min(startIndex + PROMPTS_PER_PAGE, filteredPrompts.length);
+              const paginatedPrompts = filteredPrompts.slice(startIndex, startIndex + PROMPTS_PER_PAGE);
 
-              <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <span className="text-xs sm:text-sm font-bold text-[#1A1A18]/40 uppercase tracking-wider">
-                    Sort:
-                  </span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-transparent font-bold text-xs sm:text-sm text-[#1A1A18] focus:outline-none cursor-pointer border-none"
-                  >
-                    <option value="Popular">Popular</option>
-                    <option value="Newest">Newest</option>
-                    <option value="PriceLow">Price: Low to High</option>
-                    <option value="PriceHigh">Price: High to Low</option>
-                  </select>
-                </div>
+              const handlePageChange = (newPage: number) => {
+                if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+                setCurrentPage(newPage);
+                window.scrollTo({ top: 280, behavior: 'smooth' });
+              };
 
-                <div className="flex items-center bg-[#F7F8FC] border border-[#E8E9F0] p-1 rounded-xl">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
-                      viewMode === 'grid' ? 'bg-white card-shadow text-[#1A1A18]' : 'text-[#1A1A18]/30 hover:text-[#1A1A18]'
-                    }`}
-                    aria-label="Grid view"
-                  >
-                    <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
-                      viewMode === 'list' ? 'bg-white card-shadow text-[#1A1A18]' : 'text-[#1A1A18]/30 hover:text-[#1A1A18]'
-                    }`}
-                    aria-label="List view"
-                  >
-                    <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Prompt Grid (3-column layout on desktop) */}
-            {filteredPrompts.length > 0 ? (
-              <div
-                className={
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-5 sm:gap-x-8 gap-y-6 sm:gap-y-12'
-                    : 'flex flex-col gap-6'
-                }
-              >
-                <AnimatePresence mode="popLayout">
-                  {filteredPrompts.map((prompt) => (
-                    <div key={prompt.id}>
-                      <PromptCard prompt={prompt} />
+              return (
+                <>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12">
+                    <div className="text-xs sm:text-sm font-bold text-[#1A1A18]/60">
+                      {filteredPrompts.length > 0 ? (
+                        <span>
+                          Showing <span className="text-[#1A1A18]">{startIndex + 1}–{endIndex}</span> of{' '}
+                          <span className="text-[#1A1A18]">{filteredPrompts.length}</span> templates
+                        </span>
+                      ) : (
+                        <span>No templates found</span>
+                      )}
                     </div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <div className="text-center py-16 sm:py-20 bg-[#F7F8FC] rounded-3xl border border-[#E8E9F0] px-4">
-                <p className="font-display font-bold text-xl sm:text-2xl text-[#1A1A18] mb-2">No prompts found</p>
-                <p className="text-xs sm:text-sm text-[#8B8E9A] mb-6">Try clearing some of your filter criteria.</p>
-                <button
-                  onClick={resetFilters}
-                  className="px-6 py-3 bg-[#1A1A18] text-white font-bold rounded-xl hover:bg-[#3A3A42] transition-colors text-xs sm:text-sm"
-                >
-                  Reset All Filters
-                </button>
-              </div>
-            )}
 
-            {/* Pagination Controls */}
-            <div className="mt-12 sm:mt-20 pt-8 sm:pt-10 border-t border-[#E8E9F0] flex items-center justify-between">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-black text-[#1A1A18]/40 hover:text-[#1A1A18] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Prev</span>
-              </button>
+                    <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <span className="text-xs sm:text-sm font-bold text-[#1A1A18]/40 uppercase tracking-wider">
+                          Sort:
+                        </span>
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value)}
+                          className="bg-transparent font-bold text-xs sm:text-sm text-[#1A1A18] focus:outline-none cursor-pointer border-none"
+                        >
+                          <option value="Popular">Popular</option>
+                          <option value="Newest">Newest</option>
+                          <option value="PriceLow">Price: Low to High</option>
+                          <option value="PriceHigh">Price: High to Low</option>
+                        </select>
+                      </div>
 
-              {/* Desktop pagination numbers */}
-              <div className="hidden sm:flex items-center gap-1">
-                {[1, 2, 3].map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-colors ${
-                      currentPage === page
-                        ? 'bg-[#1A1A18] text-white'
-                        : 'hover:bg-[#F7F8FC] text-[#1A1A18]/40 hover:text-[#1A1A18]'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <span className="w-10 h-10 flex items-center justify-center text-[#1A1A18]/20 text-xs font-bold">
-                  ...
-                </span>
-                <button
-                  onClick={() => setCurrentPage(21)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-colors ${
-                    currentPage === 21
-                      ? 'bg-[#1A1A18] text-white'
-                      : 'hover:bg-[#F7F8FC] text-[#1A1A18]/40 hover:text-[#1A1A18]'
-                  }`}
-                >
-                  21
-                </button>
-              </div>
+                      <div className="flex items-center bg-[#F7F8FC] border border-[#E8E9F0] p-1 rounded-xl">
+                        <button
+                          onClick={() => setViewMode('grid')}
+                          className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                            viewMode === 'grid' ? 'bg-white card-shadow text-[#1A1A18]' : 'text-[#1A1A18]/30 hover:text-[#1A1A18]'
+                          }`}
+                          aria-label="Grid view"
+                        >
+                          <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                        <button
+                          onClick={() => setViewMode('list')}
+                          className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                            viewMode === 'list' ? 'bg-white card-shadow text-[#1A1A18]' : 'text-[#1A1A18]/30 hover:text-[#1A1A18]'
+                          }`}
+                          aria-label="List view"
+                        >
+                          <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Mobile page indicator */}
-              <div className="sm:hidden text-xs font-bold text-[#1A1A18]/60">
-                Page {currentPage} of 21
-              </div>
+                  {/* Prompt Grid (15 prompts loaded at once) */}
+                  {paginatedPrompts.length > 0 ? (
+                    <div
+                      className={
+                        viewMode === 'grid'
+                          ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-5 sm:gap-x-8 gap-y-6 sm:gap-y-12'
+                          : 'flex flex-col gap-6'
+                      }
+                    >
+                      <AnimatePresence mode="popLayout">
+                        {paginatedPrompts.map((prompt) => (
+                          <div key={prompt.id}>
+                            <PromptCard prompt={prompt} />
+                          </div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <div className="text-center py-16 sm:py-20 bg-[#F7F8FC] rounded-3xl border border-[#E8E9F0] px-4">
+                      <p className="font-display font-bold text-xl sm:text-2xl text-[#1A1A18] mb-2">No prompts found</p>
+                      <p className="text-xs sm:text-sm text-[#8B8E9A] mb-6">Try clearing some of your filter criteria.</p>
+                      <button
+                        onClick={resetFilters}
+                        className="px-6 py-3 bg-[#1A1A18] text-white font-bold rounded-xl hover:bg-[#3A3A42] transition-colors text-xs sm:text-sm"
+                      >
+                        Reset All Filters
+                      </button>
+                    </div>
+                  )}
 
-              <button
-                onClick={() => setCurrentPage((p) => p + 1)}
-                className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-black text-[#1A1A18] hover:text-[#8AAAFF] transition-colors"
-              >
-                <span>Next</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+                  {/* Pagination Bar (15 Prompts Per Page) */}
+                  {totalPages > 1 && (
+                    <div className="mt-12 sm:mt-16 flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-5 bg-white border border-[#E8E9F0] rounded-2xl card-shadow">
+                      <div className="text-xs sm:text-sm font-semibold text-[#8B8E9A]">
+                        Page <span className="text-[#1A1A18] font-bold">{currentPage}</span> of{' '}
+                        <span className="text-[#1A1A18] font-bold">{totalPages}</span>
+                        <span className="hidden sm:inline"> • Showing {startIndex + 1}–{endIndex} of {filteredPrompts.length} templates</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        {/* Previous Button */}
+                        <button
+                          type="button"
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage <= 1}
+                          className="flex items-center gap-1 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all border border-[#E8E9F0] disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-[#F7F8FC] hover:enabled:border-[#1A1A18]/20 text-[#1A1A18]"
+                          aria-label="Previous Page"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          <span className="hidden xs:inline">Prev</span>
+                        </button>
+
+                        {/* Numbered Page Buttons */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                          const isActive = pageNum === currentPage;
+                          return (
+                            <button
+                              key={pageNum}
+                              type="button"
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
+                                isActive
+                                  ? 'bg-[#1A1A18] text-white shadow-sm scale-105'
+                                  : 'bg-transparent text-[#1A1A18]/70 hover:bg-[#F7F8FC] hover:text-[#1A1A18] border border-[#E8E9F0]'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+
+                        {/* Next Button */}
+                        <button
+                          type="button"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage >= totalPages}
+                          className="flex items-center gap-1 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all border border-[#E8E9F0] disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-[#F7F8FC] hover:enabled:border-[#1A1A18]/20 text-[#1A1A18]"
+                          aria-label="Next Page"
+                        >
+                          <span className="hidden xs:inline">Next</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
           </div>
         </div>
       </div>

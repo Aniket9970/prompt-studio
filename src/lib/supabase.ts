@@ -29,14 +29,31 @@ export const supabase = createClient(
 );
 
 /**
- * Uploads a video or image file from the device to Supabase Storage (bucket: prompt-media).
+ * Uploads a video or image file from the device.
+ * For videos, uploads directly to Cloudflare R2 (bucket: prompt-videos) with zero storage load on DB.
+ * For images, uploads to Cloudflare CDN / Supabase storage bucket 'prompt-media'.
  * Returns the permanent public CDN URL of the media.
  */
 export async function uploadMediaToSupabase(
   file: File,
-  folder: 'videos' | 'images' = 'videos'
+  folder: 'videos' | 'images' = 'videos',
+  onProgress?: (percent: number) => void
 ): Promise<{ url: string | null; error: string | null }> {
   try {
+    // If uploading a video, prioritize Cloudflare R2 CDN directly
+    if (folder === 'videos') {
+      try {
+        const { uploadVideoToR2 } = await import('./cloudflareR2');
+        const r2Result = await uploadVideoToR2(file, onProgress);
+        if (r2Result.url) {
+          return r2Result;
+        }
+        console.warn('R2 upload fallback notice:', r2Result.error);
+      } catch (r2Err) {
+        console.warn('R2 import/upload error, falling back to storage:', r2Err);
+      }
+    }
+
     const fileExt = file.name.split('.').pop() || 'mp4';
     const cleanFileName = file.name
       .replace(/\.[^/.]+$/, '')
@@ -54,7 +71,7 @@ export async function uploadMediaToSupabase(
       });
 
     if (uploadError) {
-      console.warn('Supabase storage bucket upload notice:', uploadError.message);
+      console.warn('Storage bucket upload notice:', uploadError.message);
       return { url: null, error: uploadError.message };
     }
 
